@@ -20,7 +20,8 @@ import {
   CheckCircle,
   HelpCircle,
   Code,
-  Hourglass
+  Hourglass,
+  Check
 } from "lucide-react";
 import { useMockState } from "../../context/MockStateContext";
 import ThemeSelector from "../../components/ThemeSelector";
@@ -43,6 +44,7 @@ export default function ChallengeDayPage() {
   const params = useParams();
   const router = useRouter();
   const dayId = params?.id ? String(params.id) : "12";
+  const isFirst = dayId === "1";
   
   const { 
     streak, 
@@ -52,26 +54,36 @@ export default function ChallengeDayPage() {
     githubRepo: defaultRepo,
     githubCommit: defaultCommit,
     linkedinPost: defaultLinkedin,
-    submitDay
+    submitDay,
+    daysCompletedCount
   } = useMockState();
 
   // Inputs
   const [repoInput, setRepoInput] = useState(defaultRepo);
   const [commitInput, setCommitInput] = useState(defaultCommit);
   const [linkedinInput, setLinkedinInput] = useState(defaultLinkedin);
-  const [reflectionInput, setReflectionInput] = useState("Implemented vector search queries using ChromaDB; embeddings indexing checks out!");
+  const [reflectionInput, setReflectionInput] = useState(
+    isFirst 
+      ? "Initialized my public repository workspace and updated my learner bio profile credentials!" 
+      : "Implemented task schema model, set up Express routing paths, and ran local validation tests using cURL queries."
+  );
 
   // States
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [successAnimation, setSuccessAnimation] = useState(false);
 
-  // Synchronize input fields with global context defaults when it changes
   useEffect(() => {
-    setRepoInput(defaultRepo);
-    setCommitInput(defaultCommit);
-    setLinkedinInput(defaultLinkedin);
-  }, [defaultRepo, defaultCommit, defaultLinkedin]);
+    if (isSubmittedToday) {
+      setRepoInput(defaultRepo || "https://github.com/vajja/ai-agent-rag-pipeline");
+      setCommitInput(defaultCommit || "feat: implement vector db query optimization and cache layer");
+      setLinkedinInput(defaultLinkedin || "https://linkedin.com/posts/vajjaaravindh_day12-rag-pipeline-building");
+    } else {
+      setRepoInput("");
+      setCommitInput("");
+      setLinkedinInput("");
+    }
+  }, [isSubmittedToday, defaultRepo, defaultCommit, defaultLinkedin]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,8 +94,8 @@ export default function ChallengeDayPage() {
       setErrorMsg("Please enter a valid GitHub repository URL (starts with https://github.com/).");
       return;
     }
-    if (!commitInput || commitInput.length < 15) {
-      setErrorMsg("Please provide a descriptive commit message (min 15 chars).");
+    if (!commitInput || commitInput.length < 5) {
+      setErrorMsg("Please provide a valid commit hash or message.");
       return;
     }
     if (!linkedinInput || !linkedinInput.startsWith("https://linkedin.com/")) {
@@ -99,10 +111,6 @@ export default function ChallengeDayPage() {
     try {
       await submitDay(repoInput, commitInput, linkedinInput, reflectionInput);
       setSuccessAnimation(true);
-      setTimeout(() => {
-        setSuccessAnimation(false);
-        router.push("/dashboard");
-      }, 3500);
     } catch (err) {
       setErrorMsg("There was a connection error validating your commit. Please try again.");
     } finally {
@@ -110,26 +118,40 @@ export default function ChallengeDayPage() {
     }
   };
 
-  // Day 12 Mock Mission Configuration
-  const dayData = {
-    title: "Build & Deploy Vector DB RAG Pipeline",
-    track: "AI & Vector Engineering",
-    difficulty: "Medium",
-    timeEst: "2 hours",
-    objectives: [
-      "Initialize and configure a local ChromaDB instance",
-      "Convert a set of text files to vector embeddings using HuggingFace / OpenAI models",
-      "Implement a retrieval query function that queries top-K matching document chunks",
-      "Construct a dynamic prompt template feeding retrieved context to a mock LLM query client"
+  // Day Data matching requested mock exactly
+  const dayData = isFirst ? {
+    title: "Setup GitHub & Connect LinkedIn",
+    difficulty: "Beginner",
+    timeEst: "~20 min",
+    rewardXp: 50,
+    goal: "Connect your core developer credentials, initialize your workspace template, and publish your commit goal.",
+    learn: [
+      "Version control workflows",
+      "Public builder social presence",
+      "Cohort tracker configuration"
     ],
-    resources: [
-      { name: "ChromaDB Quickstart Docs", link: "https://docs.trychroma.com/" },
-      { name: "Sentence Transformers Guide", link: "https://huggingface.co/sentence-transformers" },
-      { name: "Vector Search Intuition Video", link: "https://youtube.com" }
+    mission: [
+      "Initialize your workspace repository template",
+      "Commit your initial baseline README files",
+      "Add GitHub & LinkedIn links to your dashboard",
+      "Submit Day 1 proof of build"
+    ]
+  } : {
+    title: "Build a REST API",
+    difficulty: "Intermediate",
+    timeEst: "~45 min",
+    rewardXp: 100,
+    goal: "Build a REST API that allows users to create, read and delete tasks.",
+    learn: [
+      "REST APIs",
+      "HTTP methods",
+      "API design"
     ],
-    requirements: [
-      "GitHub repo must contain chromadb client configuration and querying script",
-      "LinkedIn post must detail what RAG stands for and include a screenshot of your terminal results"
+    mission: [
+      "Create the API",
+      "Connect your database",
+      "Test your endpoints",
+      "Deploy your project"
     ]
   };
 
@@ -164,83 +186,77 @@ export default function ChallengeDayPage() {
       <main className="max-w-md mx-auto px-4 mt-6 space-y-6 relative z-10">
         
         {/* Mission Heading */}
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-brand-acc border border-brand/20 px-2 py-0.5 text-[10px] font-semibold text-brand transition-colors duration-500">
-              Day {dayId} Mission
-            </span>
-            <span className="text-[10px] text-slate-500 font-medium">• {dayData.track}</span>
-          </div>
-          <h1 className="text-xl font-extrabold tracking-tight text-slate-100 mt-2">
+        <div className="border-b border-white/5 pb-4">
+          <span className="text-[10px] font-bold text-brand uppercase tracking-wider transition-colors duration-500">
+            DAY {dayId}
+          </span>
+          <h1 className="text-xl font-extrabold tracking-tight text-slate-100 mt-1">
             {dayData.title}
           </h1>
-          <div className="flex gap-4 mt-2 text-[10px] text-slate-400">
-            <span className="flex items-center gap-1">Difficulty: <span className="text-brand font-semibold transition-colors duration-500">{dayData.difficulty}</span></span>
-            <span>Est: {dayData.timeEst}</span>
+          <div className="flex gap-4 mt-2 text-[10px] text-slate-400 font-medium">
+            <span>{dayData.difficulty}</span>
+            <span>•</span>
+            <span>{dayData.timeEst}</span>
+            <span>•</span>
+            <span className="text-brand">+{dayData.rewardXp} XP</span>
           </div>
         </div>
 
-        {/* Learning Objectives */}
-        <section className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm space-y-3">
-          <h3 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-            <BookOpen className="h-4 w-4 text-brand" />
-            Learning Objectives
-          </h3>
-          <ul className="space-y-2">
-            {dayData.objectives.map((obj, index) => (
-              <li key={index} className="flex gap-2.5 items-start text-xs text-slate-400 leading-relaxed">
-                <CheckSquare className="h-4 w-4 text-brand shrink-0 mt-0.5" />
-                <span>{obj}</span>
+        {/* Goal Description Section */}
+        <section className="space-y-2">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Today's Goal</h3>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            {dayData.goal}
+          </p>
+        </section>
+
+        <hr className="border-white/5" />
+
+        {/* What You'll Learn Section */}
+        <section className="space-y-2">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">What you'll learn</h3>
+          <ul className="space-y-1.5">
+            {dayData.learn.map((item, i) => (
+              <li key={i} className="flex items-center gap-2 text-xs text-slate-400">
+                <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-brand-acc text-brand text-[9px] font-bold shrink-0">✓</span>
+                <span>{item}</span>
               </li>
             ))}
           </ul>
         </section>
 
-        {/* Resources */}
-        <section className="rounded-2xl border border-white/5 bg-slate-900/40 p-4 backdrop-blur-sm space-y-2.5">
-          <h3 className="text-xs font-semibold text-slate-300">Recommended Resources</h3>
-          <div className="flex flex-col gap-2">
-            {dayData.resources.map((res, index) => (
-              <a 
-                key={index} 
-                href={res.link} 
-                target="_blank" 
-                rel="noreferrer"
-                className="flex items-center justify-between rounded-xl bg-slate-950 hover:bg-slate-900 border border-white/5 px-3.5 py-2 text-xs text-slate-300 hover:text-white transition-all group"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand" />
-                  {res.name}
-                </span>
-                <ExternalLink className="h-3.5 w-3.5 text-slate-500 group-hover:text-brand transition-colors" />
-              </a>
-            ))}
-          </div>
-        </section>
+        <hr className="border-white/5" />
 
-        {/* Submission Rules checklist */}
-        <section className="rounded-2xl border border-white/5 bg-slate-900/40 p-4 backdrop-blur-sm space-y-2">
-          <h3 className="text-xs font-semibold text-slate-300">Submission Requirements</h3>
-          <ul className="space-y-1.5 text-[11px] text-slate-400 leading-relaxed list-disc list-inside">
-            {dayData.requirements.map((req, i) => (
-              <li key={i}>{req}</li>
+        {/* Checklist Section */}
+        <section className="space-y-2.5">
+          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Your Mission</h3>
+          <ul className="space-y-2 pl-1">
+            {dayData.mission.map((step, idx) => (
+              <li key={idx} className="flex gap-3 items-center text-xs text-slate-300">
+                <span className="h-5 w-5 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center text-[9px] font-bold text-slate-500 shrink-0">
+                  {idx + 1}
+                </span>
+                <span>{step}</span>
+              </li>
             ))}
           </ul>
         </section>
 
+        <hr className="border-white/5" />
+
         {/* Proof of Work Submission Form */}
-        <section className="rounded-2xl border border-white/10 bg-slate-900/50 p-5 backdrop-blur-md space-y-4">
+        <section className="rounded-2xl border border-white/10 bg-slate-900/40 p-5 space-y-4">
           <h3 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
             <Send className="h-4 w-4 text-brand" />
-            Proof of Work Submission
+            Submit your work
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             
             {/* GitHub Repo Input */}
             <div className="space-y-1.5">
-              <label htmlFor="repo-input" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <Github className="h-3.5 w-3.5 text-slate-400" /> GitHub Repository
+              <label htmlFor="repo-input" className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                GitHub Repository
               </label>
               <input
                 id="repo-input"
@@ -253,17 +269,17 @@ export default function ChallengeDayPage() {
               />
             </div>
 
-            {/* GitHub Commit Message Input */}
+            {/* GitHub Commit Link Input */}
             <div className="space-y-1.5">
-              <label htmlFor="commit-input" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <Code className="h-3.5 w-3.5 text-slate-400" /> Commit Message
+              <label htmlFor="commit-input" className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                GitHub Commit
               </label>
               <input
                 id="commit-input"
                 type="text"
                 value={commitInput}
                 onChange={(e) => setCommitInput(e.target.value)}
-                placeholder="feat: implement chromadb configurations..."
+                placeholder="https://github.com/username/project/commit/hash"
                 disabled={isSubmittedToday || isSubmitting}
                 className="w-full rounded-xl bg-slate-950 border border-white/10 px-3.5 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand transition-colors disabled:opacity-50"
               />
@@ -271,8 +287,8 @@ export default function ChallengeDayPage() {
 
             {/* LinkedIn Post Input */}
             <div className="space-y-1.5">
-              <label htmlFor="linkedin-input" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                <Linkedin className="h-3.5 w-3.5 text-sky-400" /> LinkedIn Share Post Link
+              <label htmlFor="linkedin-input" className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                LinkedIn Post
               </label>
               <input
                 id="linkedin-input"
@@ -285,38 +301,38 @@ export default function ChallengeDayPage() {
               />
             </div>
 
-            {/* WOW FEATURE 5: Time Capsule Daily Reflection Note */}
+            {/* Reflection Note Input */}
             <div className="space-y-1.5">
-              <label htmlFor="reflection-input" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <label htmlFor="reflection-input" className="text-[9px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <Hourglass className="h-3.5 w-3.5 text-brand" />
-                Time Capsule Reflection Note
+                Reflection note
               </label>
               <textarea
                 id="reflection-input"
                 rows={2}
                 value={reflectionInput}
                 onChange={(e) => setReflectionInput(e.target.value)}
-                placeholder="Write a one-line reflection of what you learned or built today..."
+                placeholder="What did you learn today?"
                 disabled={isSubmittedToday || isSubmitting}
                 className="w-full rounded-xl bg-slate-950 border border-white/10 px-3.5 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand transition-colors disabled:opacity-50 resize-none font-sans"
               />
             </div>
 
             {errorMsg && (
-              <p className="text-[10px] text-rose-400 leading-relaxed font-semibold">
+              <p className="text-[10px] text-rose-400 font-semibold leading-none">
                 {errorMsg}
               </p>
             )}
 
             {isSubmittedToday ? (
               <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/25 p-3 text-center text-xs font-semibold text-emerald-400">
-                ✓ Already Submitted and Verified!
+                ✓ Day {dayId} Complete!
               </div>
             ) : (
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-bold text-white transition-all hover:bg-brand/90 hover:scale-102 active:scale-98 disabled:opacity-60 disabled:pointer-events-none"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-bold text-white transition-all hover:bg-brand/90 hover:scale-102 active:scale-98 disabled:opacity-60"
               >
                 {isSubmitting ? (
                   <>
@@ -324,7 +340,7 @@ export default function ChallengeDayPage() {
                   </>
                 ) : (
                   <>
-                    Submit Proof of Work
+                    Submit Day {dayId}
                   </>
                 )}
               </button>
@@ -351,31 +367,30 @@ export default function ChallengeDayPage() {
             >
               <div className="absolute inset-0 bg-brand/5 blur-md pointer-events-none" />
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <CheckCircle className="h-8 w-8" />
+                <CheckCircle className="h-8 w-8 text-emerald-400" />
               </div>
-              <h2 className="text-lg font-bold text-slate-100 mt-4">Day {dayId} Verified!</h2>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Daily Proof-of-Work authenticated. Commited to main branch.
-              </p>
               
-              <div className="mt-5 border-t border-white/5 pt-4 flex justify-around text-center">
-                <div>
-                  <span className="text-xs text-slate-500 font-semibold block">Streak</span>
-                  <span className="text-sm font-bold text-amber-400 flex items-center justify-center gap-0.5">
-                    <Flame className="h-4 w-4 fill-amber-400" /> {streak + 1} Days
-                  </span>
-                </div>
-                <div>
-                  <span className="text-xs text-slate-500 font-semibold block">XP Earned</span>
-                  <span className="text-sm font-bold text-brand">
-                    +200 XP
-                  </span>
+              <h2 className="text-base font-extrabold text-slate-100 mt-4">
+                🎉 Day {dayId} Complete!
+              </h2>
+              
+              <div className="space-y-1 mt-2 text-xs text-slate-400">
+                <div className="text-brand font-bold text-sm">+{dayData.rewardXp} XP</div>
+                <div>🔥 Your streak continues</div>
+                <div className="font-semibold text-slate-200 mt-1">
+                  {daysCompletedCount + 1} / 60 completed
                 </div>
               </div>
 
-              <div className="mt-6 text-[10px] text-slate-500 italic">
-                AI Coach: &quot;Outstanding vector DB design! Resumed next milestone query.&quot;
-              </div>
+              <button
+                onClick={() => {
+                  setSuccessAnimation(false);
+                  router.push("/dashboard");
+                }}
+                className="mt-6 w-full rounded-xl bg-brand hover:bg-brand/90 py-2.5 text-xs font-bold text-white transition-all active:scale-98 shadow-lg shadow-brand/10"
+              >
+                Continue to Day {parseInt(dayId) + 1}
+              </button>
             </motion.div>
           </motion.div>
         )}

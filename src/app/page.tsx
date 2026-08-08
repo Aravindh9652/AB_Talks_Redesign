@@ -130,18 +130,17 @@ export default function LandingPage() {
           transition={{ delay: 0.1, duration: 0.5 }}
           className="text-4xl font-extrabold tracking-tight bg-gradient-to-b from-white via-slate-100 to-slate-400 bg-clip-text text-transparent"
         >
-          Commit to 60 Days.<br />
-          Build in Public.<br />
-          Get Hired.
+          60 Days. 60 Builds.<br />
+          One Stronger You.
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="mt-4 text-sm text-slate-400 leading-relaxed"
+          className="mt-4 text-xs text-slate-400 leading-relaxed max-w-sm mx-auto"
         >
-          Indian college students are landing premium software roles not by polishing resumes, but by proving consistency daily. Take the ultimate 60-day building challenge.
+          Build something every day. Track your progress. Build a public GitHub record. Share your journey on LinkedIn. Become more visible to recruiters.
         </motion.p>
 
         <motion.div
@@ -152,11 +151,11 @@ export default function LandingPage() {
         >
           <Link
             href="/dashboard"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3.5 px-6 text-sm font-semibold text-white shadow-lg shadow-violet-500/25 hover:bg-violet-500 hover:shadow-violet-500/35 transition-all hover:-translate-y-0.5 active:translate-y-0 duration-200"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 px-6 text-xs font-bold text-white shadow-lg shadow-brand/25 hover:bg-brand/90 hover:shadow-brand/35 transition-all hover:-translate-y-0.5 active:translate-y-0 duration-200"
           >
             Claim Your Spot <ArrowRight className="h-4 w-4" />
           </Link>
-          <span className="text-[10px] text-slate-500 flex items-center gap-1">
+          <span className="text-[9px] text-slate-500 flex items-center gap-1">
             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Free for students. No card required.
           </span>
         </motion.div>

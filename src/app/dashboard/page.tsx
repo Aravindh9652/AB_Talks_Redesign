@@ -28,7 +28,8 @@ import {
   Share2,
   Hourglass,
   RefreshCw,
-  Search
+  UserCheck,
+  Plus
 } from "lucide-react";
 import { useMockState, Submission } from "../context/MockStateContext";
 import ThemeSelector from "../components/ThemeSelector";
@@ -68,35 +69,18 @@ export default function Dashboard() {
     setLinkedinConnected
   } = useMockState();
 
-  // Navigation / Tab states
-  const [activeQuizAnswer, setActiveQuizAnswer] = useState<number | null>(null);
-  const [quizSubmitted, setQuizSubmitted] = useState(false);
-  const [showRecruiterPreview, setShowRecruiterPreview] = useState(false);
-  const [linkCopied, setLinkCopied] = useState(false);
-  
-  // Interactive calendar submission state
+  // Dialog State
   const [selectedDaySubmission, setSelectedDaySubmission] = useState<Submission | null>(null);
   
+  // Custom Connect state dialogs
+  const [connectingProfile, setConnectingProfile] = useState(false);
 
-  // SDE Career DNA scores (Dynamic based on streak & level)
-  const dnaScores = {
-    sdeCore: isFirstDay ? 10 : Math.min(95, 60 + streak * 2.5),
-    aiRAG: isFirstDay ? 5 : Math.min(98, 40 + streak * 3.5),
-    prompting: isFirstDay ? 20 : Math.min(95, 50 + streak * 3.0),
-    socialVisibility: isFirstDay ? 5 : Math.min(90, 30 + streak * 4.0)
-  };
-
-  // Calculated stats
-  const nextLevelXp = level * 1000;
-  const progressPercent = Math.min(100, Math.round((xp / nextLevelXp) * 100));
-  const challengeProgress = Math.round((daysCompletedCount / 60) * 100);
-  
-  // Recruiter Visibility Score
+  // Recruiter Score Index
   const recruiterScore = isFirstDay 
     ? 0 
     : Math.min(100, Math.round((streak * 3.5) + (daysCompletedCount * 0.8) + (level * 4) + (isSubmittedToday ? 5 : 0)));
 
-  // Mock Activity Calendar Grid (60 Days)
+  // Mock Calendar 60 Days Grid
   const gridCells = Array.from({ length: 60 }, (_, i) => {
     const dayNum = i + 1;
     let status: "locked" | "completed" | "missed" | "active" = "locked";
@@ -106,12 +90,11 @@ export default function Dashboard() {
     } else if (isChallengeCompleted) {
       status = "completed";
     } else {
-      // Normal Day 12 settings
       if (dayNum <= daysCompletedCount) {
         status = "completed";
       } else if (dayNum === 12) {
         status = isSubmittedToday ? "completed" : "active";
-      } else if (isMissedDay && dayNum === 9) {
+      } else if (isMissedDay && dayNum === 11) {
         status = "missed";
       } else {
         status = "locked";
@@ -127,32 +110,20 @@ export default function Dashboard() {
         setSelectedDaySubmission(sub);
       }
     } else if (status === "active" && !isSubmittedToday) {
-      // Link to day submission page
       window.location.href = isFirstDay ? "/day/1" : "/day/12";
     }
   };
 
-  const handleRefreezeQuiz = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (activeQuizAnswer === 2) {
-      // Correct answer ("Performs fast vector similarity searches")
-      useRefreeze();
-      setQuizSubmitted(true);
-      setTimeout(() => {
-        setQuizSubmitted(false);
-        setActiveQuizAnswer(null);
-      }, 2000);
-    } else {
-      alert("Incorrect answer. Read the documentation resources and try again!");
-    }
+  const handleProfileConnect = () => {
+    setConnectingProfile(true);
+    setTimeout(() => {
+      setGithubConnected(true);
+      setLinkedinConnected(true);
+      setConnectingProfile(false);
+    }, 1200);
   };
 
-  const copyRecruiterLink = () => {
-    navigator.clipboard.writeText("https://abtalks.in/profile/vajja");
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
-  };
-
+  const currentChallengeProgress = Math.round((daysCompletedCount / 60) * 100);
 
   return (
     <div className="relative min-h-screen bg-slate-950 text-slate-100 bg-grid-pattern pb-24 overflow-x-hidden font-sans transition-colors duration-300">
@@ -188,170 +159,209 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Container - Optimized for 390px (Mobile-First) */}
+      {/* Main Container - Optimized for 390px (Mobile-First Layout) */}
       <main className="max-w-md mx-auto px-4 mt-6 space-y-6 relative z-10">
         
-        {/* Welcome & Title */}
-        <div>
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-            {isFirstDay ? "Welcome Rookie" : "Keep the Momentum"}
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight mt-0.5 text-slate-100 flex items-center gap-2">
-            Namaste, Vajja!
-            {streak > 0 && <Sparkles className="h-5 w-5 text-amber-400 animate-bounce" />}
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            {isFirstDay 
-              ? "Your 60-day building journey begins now. Establish your baseline today!"
-              : isMissedDay 
-              ? "You missed yesterday's deadline. Break through the friction and repair your streak today!"
-              : isChallengeCompleted 
-              ? "Magnificent! You completed the 60-day challenge. Your profile is high-priority for recruiters."
-              : `You are in the top 8% of Cohort 05. Maintain your streak to lock in recruiter matches.`}
-          </p>
+        {/* Welcome Section */}
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-slate-100">
+              {isFirstDay ? "Namaste Builder 🚀" : "Good evening, Vajja 👋"}
+            </h1>
+            <p className="text-xs text-slate-400 mt-1">
+              {isFirstDay 
+                ? "Your journey starts today. Everyone starts somewhere." 
+                : isMissedDay 
+                ? "Your streak paused. That's okay." 
+                : "You're building a public record of what you can do."}
+            </p>
+          </div>
+          <div className="text-right">
+            <span className="text-2xl font-black text-brand transition-colors duration-500">
+              {isFirstDay ? "Day 1" : `Day 12`}
+            </span>
+            <span className="text-[9px] text-slate-500 block uppercase font-semibold">of 60 days</span>
+          </div>
         </div>
 
-        {/* WOW FEATURE 1: Momentum Recovery Quiz (Guides broken streak users back) */}
+        {/* EDGE CASE 2: Streak Paused / Missed Day Recovery Panel (Mandatory requirement) */}
         {isMissedDay && (
-          <div className="rounded-2xl border border-brand/20 bg-brand/5 p-4 flex flex-col gap-3">
-            <div className="flex gap-2 items-center">
-              <AlertCircle className="h-4.5 w-4.5 text-brand" />
-              <h3 className="text-xs font-bold text-brand">Streak Freeze Recovery</h3>
+          <div className="rounded-2xl border border-brand/20 bg-brand/5 p-5 space-y-3.5">
+            <div className="flex gap-2 items-center text-brand">
+              <Flame className="h-5 w-5 fill-brand/20 animate-pulse" />
+              <h3 className="text-xs font-bold uppercase tracking-wider">Streak Paused</h3>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              You missed yesterday's submission. Answer this daily engineering concept quiz to use your <strong>Streak Freeze ({streakRefreezes} left)</strong> and restore your 11-day streak!
+            <p className="text-xs text-slate-300 leading-relaxed">
+              That's okay. You missed Day 11. Don't lose your 10 days of progress. Complete today's task + a 10-minute recovery task to restore your momentum.
             </p>
 
-            {quizSubmitted ? (
-              <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/25 p-3 text-center text-xs font-bold text-emerald-400 flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-4 w-4 animate-bounce" /> Streak Frozen and Repaired Successfully!
-              </div>
-            ) : (
-              <form onSubmit={handleRefreezeQuiz} className="space-y-2 mt-1">
-                <div className="text-[10px] font-semibold text-slate-300">
-                  Question: What does a Vector DB index (like HNSW) accomplish?
-                </div>
-                <div className="space-y-1.5 text-[11px]">
-                  <label className="flex items-center gap-2 rounded-xl bg-slate-950 border border-white/5 p-2.5 cursor-pointer hover:bg-slate-900 transition-colors">
-                    <input 
-                      type="radio" 
-                      name="recovery-quiz" 
-                      checked={activeQuizAnswer === 1}
-                      onChange={() => setActiveQuizAnswer(1)} 
-                    />
-                    <span>It encrypts embeddings data</span>
-                  </label>
-                  <label className="flex items-center gap-2 rounded-xl bg-slate-950 border border-white/5 p-2.5 cursor-pointer hover:bg-slate-900 transition-colors">
-                    <input 
-                      type="radio" 
-                      name="recovery-quiz" 
-                      checked={activeQuizAnswer === 2}
-                      onChange={() => setActiveQuizAnswer(2)} 
-                    />
-                    <span>It performs fast vector similarity searches</span>
-                  </label>
-                  <label className="flex items-center gap-2 rounded-xl bg-slate-950 border border-white/5 p-2.5 cursor-pointer hover:bg-slate-900 transition-colors">
-                    <input 
-                      type="radio" 
-                      name="recovery-quiz" 
-                      checked={activeQuizAnswer === 3}
-                      onChange={() => setActiveQuizAnswer(3)} 
-                    />
-                    <span>It caches HTML query templates</span>
-                  </label>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={activeQuizAnswer === null}
-                  className="w-full rounded-xl bg-brand hover:bg-brand/90 py-2 mt-2 text-[11px] font-bold text-white transition-all disabled:opacity-50"
-                >
-                  Verify Answer & Freeze Streak
-                </button>
-              </form>
-            )}
+            <button
+              onClick={useRefreeze}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-brand hover:bg-brand/90 py-3 text-xs font-bold text-white transition-all active:scale-98 shadow-lg shadow-brand/15"
+            >
+              <Zap className="h-4.5 w-4.5 fill-white/10" />
+              Recover My Streak
+            </button>
           </div>
         )}
 
-        {/* Level and XP progress bar */}
-        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4 backdrop-blur-sm space-y-2">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-400 flex items-center gap-1">
-              <Zap className="h-3.5 w-3.5 text-brand" /> XP Progress
-            </span>
-            <span className="font-semibold text-brand">
-              {xp} / {nextLevelXp} XP
-            </span>
-          </div>
-          <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
-            <div 
-              className="h-full rounded-full bg-brand transition-all duration-500"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          <div className="flex justify-between items-center text-[10px] text-slate-500">
-            <span>Level {level}</span>
-            <span>{100 - progressPercent}% until Lvl {level + 1}</span>
-          </div>
-        </div>
-
-        {/* Dynamic Action / Today's Task Card */}
-        <div className="relative rounded-2xl border border-brand/20 bg-gradient-to-b from-slate-900 to-slate-950 p-5 shadow-lg overflow-hidden">
+        {/* Today's Mission Action Card */}
+        <div className="relative rounded-2xl border border-brand/25 bg-gradient-to-b from-slate-900 to-slate-950 p-5 shadow-lg overflow-hidden">
           <div className="absolute top-0 right-0 h-32 w-32 bg-brand/10 rounded-full blur-2xl pointer-events-none" />
           
           <div className="flex justify-between items-start">
-            <span className="rounded-full bg-brand-acc border border-brand/20 px-2 py-0.5 text-[10px] font-medium text-brand">
-              {isFirstDay ? "Day 1: Baseline" : "Day 12 Mission"}
+            <span className="rounded-full bg-brand-acc border border-brand/20 px-2 py-0.5 text-[10px] font-semibold text-brand transition-colors duration-500">
+              {isFirstDay ? "DAY 1 / 60" : "DAY 12 / 60"}
             </span>
             <span className="text-[10px] text-slate-400 flex items-center gap-1 font-semibold uppercase">
-              <Target className="h-3.5 w-3.5 text-amber-500" />
-              {isSubmittedToday ? "COMPLETED" : "10 hrs left"}
+              {isSubmittedToday ? "COMPLETED" : "TODAY'S MISSION"}
             </span>
           </div>
 
-          <h2 className="text-base font-bold mt-2 text-slate-100">
-            {isFirstDay 
-              ? "Setup Github & Connect LinkedIn" 
-              : "Build & Deploy Vector DB RAG Pipeline"}
+          <h2 className="text-base font-bold mt-2.5 text-slate-100">
+            {isFirstDay ? "Setup GitHub & Connect LinkedIn" : "Build a REST API"}
           </h2>
           <p className="text-xs text-slate-400 mt-1 leading-relaxed">
             {isFirstDay 
-              ? "Connect your credentials and write your first public post about committing to building in public."
-              : "Configure ChromaDB, store sample document embeddings, and construct a query utility."}
+              ? "Initialize your workspaces and commit a baseline README to document your 60-day goals."
+              : "Build a REST API that allows users to create, read and delete tasks successfully."}
           </p>
 
-          <div className="mt-4 flex gap-4 text-[11px] text-slate-500">
-            <span className="flex items-center gap-1">
-              <Code className="h-3.5 w-3.5" /> Intermediate
-            </span>
-            <span>•</span>
-            <span>Est: 2 hours</span>
+          <div className="mt-4 flex gap-4 text-[10px] text-slate-500 font-medium">
+            <span className="flex items-center gap-1">⏱ {isFirstDay ? "~20 min" : "~45 min"}</span>
+            <span className="flex items-center gap-1">⚡ {isFirstDay ? "+50 XP" : "+100 XP"}</span>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-white/5 flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-[10px] font-semibold text-slate-400">Reward: +200 XP</span>
-            </div>
-            
+          <div className="mt-5 pt-4 border-t border-white/5">
             {isSubmittedToday ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/25">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Submitted
+              <span className="w-full flex items-center justify-center gap-1 rounded-xl bg-emerald-500/10 py-3 text-xs font-bold text-emerald-400 border border-emerald-500/25">
+                <CheckCircle2 className="h-4.5 w-4.5" /> Mission Completed
               </span>
             ) : (
               <Link
                 href={isFirstDay ? "/day/1" : "/day/12"}
-                className="inline-flex items-center gap-1 rounded-xl bg-brand hover:bg-brand/90 px-4 py-2 text-xs font-bold text-white transition-all hover:scale-103 active:scale-98 shadow-md shadow-brand/10"
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-brand hover:bg-brand/90 py-3 text-xs font-bold text-white transition-all hover:scale-102 active:scale-98 shadow-md shadow-brand/10"
               >
-                Start Mission <ArrowRight className="h-3.5 w-3.5" />
+                Start today's challenge <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             )}
           </div>
         </div>
 
+        {/* EDGE CASE 3: Empty Profile connected section (Mandatory requirement) */}
+        {isFirstDay && !githubConnected && !linkedinConnected ? (
+          <div className="rounded-2xl border border-white/5 bg-slate-900/30 p-5 space-y-3.5 text-center">
+            <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wide">Complete your profile</h3>
+            <p className="text-xs text-slate-400 leading-relaxed px-2">
+              Add your GitHub and LinkedIn to unlock your public learner profile and establish visibility indices.
+            </p>
+            <button
+              onClick={handleProfileConnect}
+              disabled={connectingProfile}
+              className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 py-3 text-xs font-bold text-slate-200 transition-colors"
+            >
+              {connectingProfile ? (
+                <>
+                  <RefreshCw className="h-4.5 w-4.5 animate-spin text-slate-500" />
+                  Connecting API socials...
+                </>
+              ) : (
+                <>
+                  Connect Profile Now
+                </>
+              )}
+            </button>
+          </div>
+        ) : (
+          /* Profile Standing & Connected Stats widget */
+          <div className="rounded-2xl border border-white/5 bg-slate-900/30 p-4.5 space-y-3.5">
+            <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2.5">
+              <span className="font-bold text-slate-300">Profile Sync</span>
+              <span className="text-[10px] text-slate-500">Updates automatically</span>
+            </div>
 
-        {/* WOW FEATURE 3: AI Career DNA Card (Visualizes SDE readiness indices) */}
-        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-xl bg-slate-950/60 p-3 border border-white/5 flex flex-col justify-between">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                  <Github className="h-3 w-3" /> GitHub Commits
+                </span>
+                <span className="text-lg font-black text-slate-200 mt-2 block">
+                  {isFirstDay ? "0 commits" : `🔥 ${daysCompletedCount} commits`}
+                </span>
+              </div>
+
+              <div className="rounded-xl bg-slate-950/60 p-3 border border-white/5 flex flex-col justify-between">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1">
+                  <Linkedin className="h-3 w-3 text-sky-400" /> LinkedIn Posts
+                </span>
+                <span className="text-lg font-black text-slate-200 mt-2 block">
+                  {isFirstDay ? "0 posts" : `${daysCompletedCount - 1} posts`}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Progress Timeline Metric */}
+        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4.5 backdrop-blur-sm space-y-3">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-300 font-bold">Your Journey</span>
+            <span className="font-bold text-slate-400">{currentChallengeProgress}% Done</span>
+          </div>
+
+          {/* Text-based custom visual bar requested in mock */}
+          <div className="flex items-center gap-1.5 font-mono text-sm tracking-widest text-slate-600 bg-slate-950/40 p-3.5 rounded-xl border border-white/5 justify-between">
+            <span className="text-brand transition-colors duration-500">
+              {isFirstDay ? "░░░░░░░░░░░░ 0%" : "████████░░░░ 20%"}
+            </span>
+            <span className="text-xs text-slate-400 font-sans font-bold shrink-0">
+              {daysCompletedCount} / 60 days
+            </span>
+          </div>
+        </div>
+
+        {/* Achievements section matching exact prompt layout */}
+        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4.5 backdrop-blur-sm space-y-3.5">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-300 font-bold">Achievements Unlocked</span>
+            <span className="text-[10px] text-slate-500">{isFirstDay ? "0 / 3" : "3 / 3"}</span>
+          </div>
+
+          <div className="space-y-2.5">
+            <div className={`flex gap-3 items-center p-2.5 rounded-xl border transition-all ${isFirstDay ? "opacity-35 bg-slate-950/20 border-white/5" : "bg-slate-950/60 border-brand/10"}`}>
+              <div className="h-8 w-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold text-base shrink-0">
+                🏆
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-200">7 Day Streak</h4>
+                <p className="text-[10px] text-slate-500">Pushed daily commits for 7 consecutive days.</p>
+              </div>
+            </div>
+
+            <div className={`flex gap-3 items-center p-2.5 rounded-xl border transition-all ${isFirstDay ? "opacity-35 bg-slate-950/20 border-white/5" : "bg-slate-950/60 border-brand/10"}`}>
+              <div className="h-8 w-8 rounded-lg bg-violet-500/10 text-violet-400 flex items-center justify-center font-bold text-base shrink-0">
+                🚀
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-200">First Project</h4>
+                <p className="text-[10px] text-slate-500">Submitted initial Day 1 project setup parameters.</p>
+              </div>
+            </div>
+
+            <div className={`flex gap-3 items-center p-2.5 rounded-xl border transition-all ${isFirstDay ? "opacity-35 bg-slate-950/20 border-white/5" : "bg-slate-950/60 border-brand/10"}`}>
+              <div className="h-8 w-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-base shrink-0">
+                💻
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-200">10 Builds</h4>
+                <p className="text-[10px] text-slate-500">Completed 10 public repository submission logs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* AI SDE Career DNA Card */}
+        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4.5 backdrop-blur-sm space-y-3">
           <h3 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
             <BrainCircuit className="h-4.5 w-4.5 text-brand animate-pulse" />
             AI SDE Career DNA
@@ -361,7 +371,6 @@ export default function Dashboard() {
           </p>
 
           <div className="space-y-2.5 mt-2">
-            {/* SDE Core */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px]">
                 <span className="text-slate-400 font-medium">SDE Core Concepts</span>
@@ -372,7 +381,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* AI Vector Engineering */}
             <div className="space-y-1">
               <div className="flex justify-between text-[10px]">
                 <span className="text-slate-400 font-medium">AI & Vector Databases</span>
@@ -382,150 +390,12 @@ export default function Dashboard() {
                 <div className="h-full bg-brand rounded-full transition-all duration-500" style={{ width: `${dnaScores.aiRAG}%` }} />
               </div>
             </div>
-
-            {/* Social Impact */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-[10px]">
-                <span className="text-slate-400 font-medium">Public Tech Presence</span>
-                <span className="text-brand font-bold">{dnaScores.socialVisibility}%</span>
-              </div>
-              <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                <div className="h-full bg-brand rounded-full transition-all duration-500" style={{ width: `${dnaScores.socialVisibility}%` }} />
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* WOW FEATURE 4: Recruiter Preview Card Toggle */}
-        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-              <TrendingUp className="h-4 w-4 text-emerald-400" />
-              Recruiter Preview Card
-            </h3>
-            <button
-              onClick={() => setShowRecruiterPreview(!showRecruiterPreview)}
-              className="text-[10px] font-bold text-brand hover:underline flex items-center gap-1"
-            >
-              {showRecruiterPreview ? "Hide Preview" : "Show Preview"}
-              <ChevronRight className={`h-3 w-3 transition-transform ${showRecruiterPreview ? "rotate-90" : ""}`} />
-            </button>
-          </div>
-
-          <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-            <div 
-              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500"
-              style={{ width: `${recruiterScore}%` }}
-            />
-          </div>
-
-          <div className="flex justify-between text-[10px] text-slate-500">
-            <span>Discoverability Index</span>
-            <span className="text-emerald-400 font-bold">{recruiterScore}% Score</span>
-          </div>
-
-          {/* Collapsible Recruiter Profile card */}
-          {showRecruiterPreview && (
-            <div className="border border-white/10 rounded-2xl bg-slate-950 p-4 space-y-3 mt-2 animate-in slide-in-from-top-3 duration-200">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-full bg-brand flex items-center justify-center font-bold text-[10px] text-white">
-                    VA
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-100">Vajja Aravindh</h4>
-                    <span className="text-[9px] text-slate-500">VR SEC Student • AI Dev</span>
-                  </div>
-                </div>
-                <span className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                  <Sparkle className="h-3 w-3 fill-emerald-400" /> Matches Active
-                </span>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 py-2 border-y border-white/5 text-center text-slate-400 text-[10px]">
-                <div>
-                  <span className="block font-bold text-slate-100">{streak} Days</span>
-                  <span>Commit Streak</span>
-                </div>
-                <div>
-                  <span className="block font-bold text-slate-100">{daysCompletedCount}</span>
-                  <span>Projects built</span>
-                </div>
-                <div>
-                  <span className="block font-bold text-slate-100">{level}</span>
-                  <span>Developer Lvl</span>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button 
-                  onClick={copyRecruiterLink}
-                  className="flex-1 flex justify-center items-center gap-1.5 rounded-xl bg-white/5 border border-white/10 py-2 text-[10px] font-bold text-slate-300 hover:bg-white/10 transition-colors"
-                >
-                  <Copy className="h-3 w-3" />
-                  {linkCopied ? "Copied Link!" : "Copy Share Link"}
-                </button>
-                <button className="rounded-xl bg-brand/10 border border-brand/20 p-2 text-brand hover:bg-brand/20 transition-colors" title="Download Portfolio PDF">
-                  <Download className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Credentials Connect Connectors */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-white/5 bg-slate-900/30 p-4 text-center flex flex-col items-center justify-between">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 border border-white/10 mb-2">
-              <Github className={`h-4.5 w-4.5 ${githubConnected ? "text-slate-200" : "text-slate-600"}`} />
-            </div>
-            <span className="text-xs font-bold text-slate-300">GitHub Connect</span>
-            <span className={`text-[10px] mt-1 font-semibold ${githubConnected ? "text-emerald-400" : "text-rose-400"}`}>
-              {githubConnected ? "Connected" : "Disconnected"}
-            </span>
-            <button 
-              onClick={() => setGithubConnected(!githubConnected)}
-              className="mt-3 w-full rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-1 text-[10px] font-semibold text-slate-300 transition-colors"
-            >
-              {githubConnected ? "Disconnect" : "Connect"}
-            </button>
-          </div>
-
-          <div className="rounded-2xl border border-white/5 bg-slate-900/30 p-4 text-center flex flex-col items-center justify-between">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 border border-white/10 mb-2">
-              <Linkedin className={`h-4.5 w-4.5 ${linkedinConnected ? "text-sky-400 font-bold" : "text-slate-600"}`} />
-            </div>
-            <span className="text-xs font-bold text-slate-300">LinkedIn Connect</span>
-            <span className={`text-[10px] mt-1 font-semibold ${linkedinConnected ? "text-emerald-400" : "text-rose-400"}`}>
-              {linkedinConnected ? "Connected" : "Disconnected"}
-            </span>
-            <button 
-              onClick={() => setLinkedinConnected(!linkedinConnected)}
-              className="mt-3 w-full rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 py-1 text-[10px] font-semibold text-slate-300 transition-colors"
-            >
-              {linkedinConnected ? "Disconnect" : "Connect"}
-            </button>
-          </div>
-        </div>
-
-        {/* AI Learning Insights */}
-        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4 backdrop-blur-sm">
-          <div className="flex items-center gap-2 text-xs font-bold text-brand mb-2">
-            <BrainCircuit className="h-4.5 w-4.5" />
-            <span>AI Coach Insight</span>
-          </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
-            {isFirstDay 
-              ? "Connecting your socials is crucial. Our data shows students who build in public increase their hiring success index by 320%." 
-              : isMissedDay 
-              ? "A broken streak is a speedbump, not a wall. Answer the conceptual quiz above to freeze your streak and keep consistency!" 
-              : "Excellent work on chromaDB setup. We suggest trying to implement embedding similarity threshold filters to prune irrelevant results for Day 13."}
-          </p>
-        </div>
-
-        {/* WOW FEATURE 5: Time Capsule Journey (Historical reflections logs) */}
+        {/* Time Capsule timeline reflections log */}
         {reflections.length > 0 && (
-          <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm space-y-3">
+          <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4.5 backdrop-blur-sm space-y-3">
             <h3 className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
               <Hourglass className="h-4 w-4 text-brand" />
               Time Capsule Reflections
@@ -535,7 +405,7 @@ export default function Dashboard() {
             </p>
 
             <div className="relative pl-4 border-l border-white/5 space-y-4 mt-3">
-              {reflections.map((ref, idx) => (
+              {reflections.slice(0, 3).map((ref, idx) => (
                 <div key={idx} className="relative text-[11px]">
                   <span className="absolute -left-5.5 top-1 h-2.5 w-2.5 rounded-full bg-brand border border-slate-950" />
                   <div className="flex justify-between text-[9px] text-slate-500 font-semibold">
@@ -551,8 +421,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* 60-Day Habit Matrix - CLICKABLE CELLS FOR HISTORIC SUBMISSIONS */}
-        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm space-y-3">
+        {/* 60-Day Habit Matrix grid (Clickable cells show modal) */}
+        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-4.5 backdrop-blur-sm space-y-3">
           <div className="flex justify-between items-center text-xs">
             <span className="text-slate-300 font-semibold flex items-center gap-1.5">
               <Calendar className="h-4 w-4 text-brand" />
@@ -571,7 +441,7 @@ export default function Dashboard() {
             {gridCells.map((cell) => {
               let bgClass = "bg-slate-900/60 border border-white/5 text-slate-600 cursor-not-allowed";
               if (cell.status === "completed") {
-                bgClass = "bg-brand/80 border border-brand/20 text-brand-acc shadow-sm shadow-brand/10 cursor-pointer hover:scale-105 active:scale-95";
+                bgClass = "bg-brand/80 border border-brand/20 text-brand shadow-sm shadow-brand/10 cursor-pointer hover:scale-105 active:scale-95";
               } else if (cell.status === "active") {
                 bgClass = "bg-amber-500/20 border border-amber-500/40 text-amber-300 font-bold animate-pulse cursor-pointer hover:scale-105";
               } else if (cell.status === "missed") {
@@ -596,100 +466,6 @@ export default function Dashboard() {
             <div className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> Missed</div>
             <div className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-amber-500" /> Active</div>
           </div>
-        </div>
-
-        {/* Consistency Index line graph */}
-        <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5 backdrop-blur-sm space-y-4">
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-slate-300 font-semibold flex items-center gap-1.5">
-              <LineChart className="h-4 w-4 text-brand" />
-              Consistency Index
-            </span>
-            <span className="text-[10px] text-brand font-bold">
-              Stable (9.4/10)
-            </span>
-          </div>
-
-          <div className="relative h-20 w-full">
-            <svg viewBox="0 0 100 30" className="w-full h-full overflow-visible">
-              <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--brand-primary)" stopOpacity="0.2"/>
-                  <stop offset="100%" stopColor="var(--brand-primary)" stopOpacity="0.0"/>
-                </linearGradient>
-              </defs>
-              <line x1="0" y1="5" x2="100" y2="5" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-              <line x1="0" y1="15" x2="100" y2="15" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-              <line x1="0" y1="25" x2="100" y2="25" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
-              
-              <path 
-                d={isFirstDay 
-                  ? "M0,30 L20,30 L40,30 L60,30 L80,30 L100,30 Z" 
-                  : "M0,28 L16,24 L32,12 L48,15 L64,8 L80,10 L100,5 L100,30 L0,30 Z"} 
-                fill="url(#chartGradient)" 
-              />
-              
-              <path 
-                d={isFirstDay 
-                  ? "M0,30 Q20,30 40,30 T80,30 T100,30" 
-                  : "M0,28 L16,24 Q32,12 48,15 T80,10 T100,5"} 
-                fill="none" 
-                stroke="var(--brand-primary)" 
-                strokeWidth="1.5" 
-              />
-              {!isFirstDay && (
-                <>
-                  <circle cx="48" cy="15" r="1.2" fill="var(--brand-primary)" stroke="#020617" strokeWidth="0.5" />
-                  <circle cx="80" cy="10" r="1.2" fill="var(--brand-primary)" stroke="#020617" strokeWidth="0.5" />
-                  <circle cx="100" cy="5" r="1.5" fill="var(--brand-primary)" stroke="#ffffff" strokeWidth="0.5" className="animate-pulse" />
-                </>
-              )}
-            </svg>
-          </div>
-          <div className="flex justify-between items-center text-[8px] text-slate-500 uppercase tracking-wider font-semibold">
-            <span>Week 1</span>
-            <span>Week 2</span>
-            <span>Week 3</span>
-            <span>Week 4</span>
-          </div>
-        </div>
-
-        {/* Recent Submissions */}
-        <div className="space-y-3">
-          <h3 className="text-xs font-semibold text-slate-400">Recent Submissions</h3>
-          
-          {submissions.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-slate-900/10 p-6 text-center">
-              <span className="text-[11px] text-slate-500">No submissions recorded yet.</span>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {submissions.map((sub, i) => (
-                <div key={i} className="rounded-2xl border border-white/5 bg-slate-900/30 p-4 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-semibold text-slate-200">Day {sub.day} Submission</span>
-                    <span className="text-[10px] text-slate-500">{sub.date}</span>
-                  </div>
-                  
-                  <div className="flex flex-col gap-1 text-[11px] text-slate-400">
-                    <span className="flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
-                      <Github className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                      {sub.githubCommit}
-                    </span>
-                    <span className="flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap text-sky-400">
-                      <Linkedin className="h-3.5 w-3.5 text-sky-400 shrink-0" />
-                      {sub.linkedinPost.substring(0, 45)}...
-                    </span>
-                  </div>
-
-                  <div className="rounded-xl bg-brand-acc border border-brand/10 p-2.5 mt-2">
-                    <div className="text-[9px] text-brand font-bold uppercase tracking-wider">AI Coach Feedback</div>
-                    <p className="text-[10px] text-slate-300 leading-relaxed mt-0.5">{sub.feedback}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
       </main>
