@@ -1,0 +1,3 @@
+/
+/dashboard
+/day/12

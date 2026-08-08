@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
+@theme {
+  --color-slate-950: #020617;
+  --color-slate-900: #0f172a;
+  --color-slate-800: #1e293b;
+  --color-slate-700: #334155;
+  
+  --color-brand: var(--brand-primary);
+  --color-brand-acc: var(--brand-accent);
+  --color-brand-glow: var(--brand-glow);
+  
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --brand-primary: #8b5cf6;
+  --brand-accent: rgba(139, 92, 246, 0.1);
+  --brand-glow: rgba(139, 92, 246, 0.2);
+  --background: #020617;
+  --foreground: #f8fafc;
+  --color-card-bg: rgba(15, 23, 42, 0.65);
+  --color-card-border: rgba(255, 255, 255, 0.08);
+  --color-text-muted: #94a3b8;
+  --color-border-glow: rgba(255, 255, 255, 0.02);
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.light-mode {
+  --brand-primary: #7c3aed;
+  --brand-accent: rgba(124, 58, 237, 0.08);
+  --brand-glow: rgba(124, 58, 237, 0.15);
+  --background: #f8fafc;
+  --foreground: #090d16;
+  --color-card-bg: rgba(255, 255, 255, 0.75);
+  --color-card-border: rgba(15, 23, 42, 0.08);
+  --color-text-muted: #475569;
+  --color-border-glow: rgba(15, 23, 42, 0.03);
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Glassmorphism custom classes */
+.glass-panel {
+  background: var(--color-card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-card-border);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-panel-hover:hover {
+  background: var(--color-card-bg);
+  border-color: rgba(var(--brand-primary), 0.25);
+  box-shadow: 0 12px 40px -12px var(--brand-glow);
+  transform: translateY(-2px);
+}
+
+/* Linear-style gradient borders */
+.gradient-border-mask {
+  position: relative;
+  border-radius: 12px;
+  background: linear-gradient(var(--color-card-bg), var(--background)) padding-box,
+              linear-gradient(135deg, var(--brand-primary), var(--color-card-border)) border-box;
+  border: 1px solid transparent;
+}
+
+/* Radial gradient ambient glows */
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, var(--color-border-glow) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-border-glow) 1px, transparent 1px);
+}
+
+.glow-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+  transition: background-color 0.5s ease;
+}
+
+/* Hide default scrollbars but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Premium scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-primary);
 }
