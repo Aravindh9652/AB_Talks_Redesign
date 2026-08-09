@@ -79,6 +79,11 @@ export default function Dashboard() {
     isChallengeCompleted,
     isSubmittedToday,
     wasStreakRecovered,
+    chosenRecoveryOption,
+    recoverStreakWithXP,
+    deductXpForDay11,
+    completeAICodeAudit,
+    completeQuizRecovery,
     submissions,
     reflections,
     streakRefreezes,
@@ -107,6 +112,12 @@ export default function Dashboard() {
   } = useMockState();
 
   // Dialog State
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [showQuizModal, setShowQuizModal] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: number }>({ 0: 0, 1: 0, 2: 0 });
+  const [quizResultModal, setQuizResultModal] = useState<{ show: boolean; score: number; passed: boolean; correctCount: number } | null>(null);
+  const [activeRecoveryOption, setActiveRecoveryOption] = useState<1 | 2 | null>(null);
+  const [showXpDeductModal, setShowXpDeductModal] = useState(false);
   const [selectedDaySubmission, setSelectedDaySubmission] = useState<Submission | null>(null);
   
   // Custom Connect state dialogs
@@ -213,7 +224,9 @@ export default function Dashboard() {
   };
 
   const isStreakRecovered = wasStreakRecovered;
-  const effectiveDaysCompleted = isFirstDay 
+  const effectiveDaysCompleted = isChallengeCompleted
+    ? 60
+    : isFirstDay 
     ? (isSubmittedToday ? 1 : 0)
     : isStreakRecovered 
     ? (isSubmittedToday ? 12 : 11)
@@ -234,18 +247,18 @@ export default function Dashboard() {
       if (dayNum === 1) status = isSubmittedToday || hasSubmission ? "completed" : "active";
     } else if (isChallengeCompleted) {
       status = "completed";
-    } else if (hasSubmission) {
-      status = "completed";
     } else if (isMissedDay) {
       if (dayNum <= 10) {
         status = "completed";
       } else if (dayNum === 11) {
-        status = "missed";
+        status = (wasStreakRecovered || isSubmittedToday) ? "completed" : "missed";
       } else if (dayNum === 12) {
         status = isSubmittedToday ? "completed" : "active";
       } else {
         status = "locked";
       }
+    } else if (hasSubmission) {
+      status = "completed";
     } else {
       if (dayNum <= daysCompletedCount) {
         status = "completed";
@@ -408,7 +421,7 @@ export default function Dashboard() {
                 </span>
                 Default Day 12
               </span>
-              <span className="text-[9px] text-slate-500">Streak: {streak}</span>
+              <span className="text-[9px] text-slate-500">Streak: 11</span>
             </button>
 
             {/* First Day */}
@@ -431,7 +444,7 @@ export default function Dashboard() {
                 </span>
                 First Day (0 Streak)
               </span>
-              <span className="text-[9px] text-slate-500">Streak: 0</span>
+              <span className="text-[9px] text-slate-500">Streak: {isSubmittedToday ? 1 : 0}</span>
             </button>
 
             {/* Missed Day */}
@@ -523,10 +536,16 @@ export default function Dashboard() {
               {isMissedDay ? "STREAK PAUSED" : "STREAK"}
             </span>
             {isFirstDay ? (
-              <span className="text-brand font-black text-sm mt-1.5 block leading-tight">
-                🚀 Day 1 of 60<br />
-                <span className="text-[9px] text-slate-400 font-medium">Everyone starts somewhere</span>
-              </span>
+              isSubmittedToday ? (
+                <span className="text-emerald-400 font-black text-base mt-1.5 block">
+                  🔥 1 day streak
+                </span>
+              ) : (
+                <span className="text-brand font-black text-sm mt-1.5 block leading-tight">
+                  🚀 Day 1 of 60<br />
+                  <span className="text-[9px] text-slate-400 font-medium">Everyone starts somewhere</span>
+                </span>
+              )
             ) : isMissedDay ? (
               <span className="text-amber-300 font-black text-sm mt-1.5 block leading-tight">
                 🔥 10 days (Paused)<br />
@@ -538,6 +557,10 @@ export default function Dashboard() {
                 <span className="text-[8px] bg-emerald-500/20 border border-emerald-500/35 text-emerald-400 font-black px-1.5 py-0.5 rounded-full uppercase tracking-wider">
                   Regained
                 </span>
+              </span>
+            ) : isChallengeCompleted ? (
+              <span className="text-emerald-400 font-black text-base mt-1.5 block">
+                🔥 60 day streak
               </span>
             ) : (
               <span className="text-slate-200 font-black text-base mt-1.5 block">
@@ -552,7 +575,7 @@ export default function Dashboard() {
               {isFirstDay ? "YOUR START" : "WHERE YOU ARE"}
             </span>
             <span className="text-slate-200 font-black text-base mt-1.5 block">
-              Day {isFirstDay ? "1" : "12"} / 60
+              Day {isFirstDay ? "1" : isChallengeCompleted ? "60" : "12"} / 60
             </span>
           </div>
         </div>
@@ -608,43 +631,131 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* EDGE CASE 2: Streak Paused — supportive recovery experience */}
+        {/* EDGE CASE 2: Streak Paused — supportive recovery experience with XP sacrifice option */}
         {isMissedDay && (
           <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-b from-amber-500/8 to-slate-900/40 p-5 space-y-4">
             {/* Header */}
-            <div className="flex gap-3 items-start">
-              <div className="h-10 w-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                <span className="text-xl">⏸</span>
+            {wasStreakRecovered ? (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                    <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-100 flex items-center gap-1.5">
+                      Streak Regained & Retrieved! <span className="text-emerald-400">🎉</span>
+                    </h3>
+                    <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">
+                      Day 11 Recovery Completed · 12-Day Streak Active
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/20 border border-emerald-500/35 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  ✓ Restored
+                </span>
               </div>
-              <div>
-                <h3 className="text-sm font-extrabold text-amber-300">Your streak paused.</h3>
-                <p className="text-[10px] text-slate-400 mt-0.5">That's okay. Life happens.</p>
+            ) : (
+              <div className="flex gap-3 items-start">
+                <div className="h-10 w-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0 border border-amber-500/30">
+                  <span className="text-xl">⏸</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-amber-300">Your streak paused.</h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                    That&apos;s okay. Life happens. Choose your preferred recovery path to restore your momentum:
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Context */}
+            {/* Context Info */}
             <div className="rounded-xl bg-slate-950/60 border border-white/5 p-3 space-y-1.5">
-              <div className="flex items-center gap-2 text-[11px] text-slate-300">
-                <span className="text-amber-400">⚠</span>
-                <span>You missed <strong>Day 11</strong>.</span>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="text-amber-400 font-semibold flex items-center gap-1.5">⚠ You missed Day 11</span>
+                <span className="text-[9px] bg-slate-800 text-emerald-400 px-2 py-0.5 rounded-md font-bold">✓ 10 Days Saved</span>
               </div>
-              <div className="flex items-center gap-2 text-[11px] text-emerald-400">
-                <span>✓</span>
-                <span><strong>10 days of progress</strong> still saved.</span>
-              </div>
-              <div className="flex items-center gap-2 text-[11px] text-slate-300">
-                <span className="text-brand">🔥</span>
-                <span>Complete <strong>today's task + a 10-min recovery task</strong> to restore.</span>
+              <div className="flex items-center gap-2 text-[10px] text-slate-400 pt-0.5">
+                <span>🔥 Reserve XP: <strong>{xp} XP</strong></span>
+                <span>·</span>
+                <span>Level: <strong>Lvl {level}</strong></span>
               </div>
             </div>
 
-            <Link
-              href="/day/11"
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 py-3.5 text-xs font-black text-white transition-all active:scale-98 shadow-lg shadow-amber-500/20"
-            >
-              <Zap className="h-4 w-4 fill-white/20" />
-              Recover My Streak — Complete Day 11 Task
-            </Link>
+            {/* Dual Recovery Options */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Option 1: XP Token (-70 XP) + Submit Day 11 Task */}
+              <button
+                disabled={chosenRecoveryOption !== null && chosenRecoveryOption !== 1}
+                onClick={() => {
+                  deductXpForDay11(70);
+                  setShowXpDeductModal(true);
+                }}
+                className={`flex flex-col justify-between rounded-xl p-3.5 text-left transition-all border shadow-lg ${
+                  chosenRecoveryOption === 2
+                    ? "bg-slate-950/40 border-white/5 opacity-30 cursor-not-allowed pointer-events-none"
+                    : chosenRecoveryOption === 1
+                    ? "bg-amber-500/20 border-amber-400 text-amber-200"
+                    : "bg-gradient-to-br from-amber-500/15 via-slate-900 to-slate-950 border-amber-500/30 hover:border-amber-400 active:scale-98"
+                }`}
+              >
+                <div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase text-amber-400 flex items-center gap-1">
+                      ⚡ Option 1: Fast-Track (-70 XP)
+                    </span>
+                    <span className="text-[9px] font-black text-rose-400 bg-rose-500/15 border border-rose-500/30 px-1.5 py-0.5 rounded-md">
+                      {chosenRecoveryOption === 2 ? "🔒 Locked" : "-70 XP"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-200 font-bold mt-1.5">XP Token + Complete Day 11</p>
+                  <p className="text-[9px] text-slate-400 mt-0.5 leading-snug">
+                    Deduct 70 XP from reserve to unlock and complete the Day 11 recovery challenge.
+                  </p>
+                </div>
+                <span className={`mt-3 w-full rounded-lg py-2 text-[10px] font-extrabold text-center border transition-colors ${
+                  chosenRecoveryOption === 2
+                    ? "bg-slate-800/40 border-white/5 text-slate-500"
+                    : "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                }`}>
+                  {chosenRecoveryOption === 2 ? "Locked (Chosen Option 2)" : chosenRecoveryOption === 1 ? "✓ Chosen & Unlocked" : "Deduct 70 XP & Open Day 11 Task →"}
+                </span>
+              </button>
+
+              {/* Option 2: Quick 3-Question Vector DB Quiz (+150 XP & Free Recovery) */}
+              <button
+                disabled={chosenRecoveryOption !== null && chosenRecoveryOption !== 2}
+                onClick={() => setShowQuizModal(true)}
+                className={`flex flex-col justify-between rounded-xl p-3.5 text-left transition-all border shadow-lg ${
+                  chosenRecoveryOption === 1
+                    ? "bg-slate-950/40 border-white/5 opacity-30 cursor-not-allowed pointer-events-none"
+                    : chosenRecoveryOption === 2
+                    ? "bg-brand/20 border-brand/40 text-brand"
+                    : "bg-gradient-to-br from-brand/15 via-slate-900 to-slate-950 border-brand/30 hover:border-brand/50 active:scale-98"
+                }`}
+              >
+                <div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black uppercase text-brand flex items-center gap-1">
+                      🧠 Option 2: Concept Quiz
+                    </span>
+                    <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-1.5 py-0.5 rounded-md">
+                      {chosenRecoveryOption === 1 ? "🔒 Locked" : chosenRecoveryOption === 2 ? "✓ Passed" : "Pass ≥ 70%"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-200 font-bold mt-1.5">3-Question Vector DB Quiz</p>
+                  <p className="text-[9px] text-slate-400 mt-0.5 leading-snug">
+                    Score &ge; 70% on ChromaDB quiz to unlock missed day challenge for free!
+                  </p>
+                </div>
+                <span className={`mt-3 w-full rounded-lg py-2 text-[10px] font-extrabold text-center border transition-colors ${
+                  chosenRecoveryOption === 1
+                    ? "bg-slate-800/40 border-white/5 text-slate-500"
+                    : "bg-brand/20 text-brand border-brand/30"
+                }`}>
+                  {chosenRecoveryOption === 1 ? "Locked (Chosen Option 1)" : chosenRecoveryOption === 2 ? "✓ Chosen & Passed" : "Start 3-Question Quiz (Pass ≥ 70%) →"}
+                </span>
+              </button>
+            </div>
           </div>
         )}
 
@@ -678,29 +789,39 @@ export default function Dashboard() {
           
           <div className="flex justify-between items-start">
             <span className="rounded-full bg-brand-acc border border-brand/20 px-2 py-0.5 text-[10px] font-semibold text-brand transition-colors duration-500">
-              {isFirstDay ? "DAY 1 / 60" : "DAY 12 / 60"}
+              {isFirstDay ? "DAY 1 / 60" : isChallengeCompleted ? "DAY 60 / 60" : "DAY 12 / 60"}
             </span>
             <span className="text-[10px] text-slate-400 flex items-center gap-1 font-semibold uppercase">
-              {isSubmittedToday ? "COMPLETED" : "TODAY'S MISSION"}
+              {isSubmittedToday || isChallengeCompleted ? "COMPLETED" : "TODAY'S MISSION"}
             </span>
           </div>
 
           <h2 className="text-base font-bold mt-2.5 text-slate-100">
-            {isFirstDay ? "Setup GitHub & Connect LinkedIn" : "Build a REST API"}
+            {isFirstDay 
+              ? "Setup GitHub & Connect LinkedIn" 
+              : isChallengeCompleted 
+              ? "Capstar Showcase & Cohort Graduation" 
+              : "Build a REST API"}
           </h2>
           <p className="text-xs text-slate-400 mt-1 leading-relaxed">
             {isFirstDay 
               ? "Initialize your workspaces and commit a baseline README to document your 60-day goals."
+              : isChallengeCompleted
+              ? "Final capstone submission verified. You have completed all 60 days of the ABTalks Fullstack & AI Cohort!"
               : "Build a REST API that allows users to create, read and delete tasks successfully."}
           </p>
 
           <div className="mt-4 flex gap-4 text-[10px] text-slate-500 font-medium">
-            <span className="flex items-center gap-1">⏱ {isFirstDay ? "~20 min" : "~45 min"}</span>
-            <span className="flex items-center gap-1">⚡ {isFirstDay ? "+50 XP" : "+100 XP"}</span>
+            <span className="flex items-center gap-1">⏱ {isFirstDay ? "~20 min" : isChallengeCompleted ? "GRADUATED" : "~45 min"}</span>
+            <span className="flex items-center gap-1">⚡ {isFirstDay ? "+50 XP" : isChallengeCompleted ? "+12,000 XP" : "+100 XP"}</span>
           </div>
 
           <div className="mt-5 pt-4 border-t border-white/5">
-            {isSubmittedToday ? (
+            {isChallengeCompleted ? (
+              <span className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/15 py-3 text-xs font-black text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/10">
+                🏅 60-Day Challenge Winner — Graduation Complete ✓
+              </span>
+            ) : isSubmittedToday ? (
               <span className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/15 py-3 text-xs font-black text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/10">
                 <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400" />
                 {isStreakRecovered ? "Streak Regained & Mission Completed ✓" : "Mission Completed"}
@@ -802,10 +923,21 @@ export default function Dashboard() {
                   </h5>
                   
                   <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1 no-scrollbar">
-                    {((!profileBio && !profileSkills)
+                    {(isChallengeCompleted
+                      ? [
+                          { id: 101, type: "streak_complete", action: "🏆 60-Day Challenge Completed & Graduated!", timestamp: "8/9/2026, 10:00:00 AM" },
+                          { id: 102, type: "streak_complete", action: "Streak day completed (Day 60)", timestamp: "8/9/2026, 9:30:00 AM" },
+                          { id: 103, type: "streak_complete", action: "Streak day completed (Day 59)", timestamp: "8/8/2026, 9:15:00 PM" },
+                          { id: 104, type: "streak_complete", action: "Streak day completed (Day 58)", timestamp: "8/7/2026, 8:45:00 PM" },
+                          { id: 105, type: "streak_complete", action: "Streak day completed (Day 57)", timestamp: "8/6/2026, 8:30:00 PM" },
+                          { id: 106, type: "account_create", action: "Account created successfully", timestamp: "7/28/2026, 7:51:24 PM" }
+                        ]
+                      : isFirstDay
+                      ? activityLogs.filter(log => log.type === "account_create" || log.type === "profile_update" || log.action.includes("Day 1"))
+                      : (!profileBio && !profileSkills)
                       ? activityLogs.filter(log => log.type !== "profile_update")
                       : isMissedDay 
-                      ? activityLogs.filter(log => !log.action.includes("Day 11") && !log.action.includes("Day 12")) 
+                      ? activityLogs.filter(log => (wasStreakRecovered ? !log.action.includes("Day 12") : (!log.action.includes("Day 11") && !log.action.includes("Day 12"))))
                       : activityLogs
                     ).map((log) => (
                       <div key={log.id} className="flex gap-2.5 items-start bg-slate-950/40 p-2.5 rounded-xl border border-white/5 text-[10px] transition-colors">
@@ -1008,7 +1140,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <span className="text-[8px] text-slate-500 font-bold uppercase block">LinkedIn</span>
-                <span className="text-sm font-black text-slate-100">{Math.max(0, effectiveDaysCompleted - 1)} posts</span>
+                <span className="text-sm font-black text-slate-100">{isFirstDay ? (isSubmittedToday ? 1 : 0) : effectiveDaysCompleted} posts</span>
               </div>
             </div>
           </div>
@@ -1026,14 +1158,14 @@ export default function Dashboard() {
             <div className="h-3 w-full rounded-full bg-slate-800/80 overflow-hidden border border-white/5">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-brand to-violet-400 transition-all duration-700 ease-out relative overflow-hidden"
-                style={{ width: `${isFirstDay ? 0 : currentProgressPercent}%` }}
+                style={{ width: `${isFirstDay && !isSubmittedToday ? 0 : currentProgressPercent}%` }}
               >
                 <div className="absolute inset-0 bg-white/10 animate-pulse rounded-full" />
               </div>
             </div>
             <div className="flex justify-between text-[9px] font-bold">
               <span className="text-slate-500">Day 0</span>
-              <span className="text-brand font-black text-[10px]">{isFirstDay ? "0%" : `${currentProgressPercent}%`} Complete</span>
+              <span className="text-brand font-black text-[10px]">{isFirstDay && !isSubmittedToday ? "0%" : `${currentProgressPercent}%`} Complete</span>
               <span className="text-slate-500">Day 60</span>
             </div>
           </div>
@@ -1128,7 +1260,11 @@ export default function Dashboard() {
             </p>
 
             <div className="relative pl-4 border-l border-white/5 space-y-4 mt-3">
-              {reflections.slice(0, 3).map((ref, idx) => (
+              {(isChallengeCompleted ? [
+                { day: 60, date: "Aug 9, 2026", note: "Deployed final microservices architecture and presented 60-day Capstone Project to senior engineering leads." },
+                { day: 59, date: "Aug 8, 2026", note: "Completed end-to-end integration tests, load testing, and optimized PostgreSQL query indexes." },
+                { day: 58, date: "Aug 7, 2026", note: "Implemented real-time WebSocket notifications and Redis Pub/Sub event distribution system." }
+              ] : reflections.slice(0, 3)).map((ref, idx) => (
                 <div key={idx} className="relative text-[11px]">
                   <span className="absolute -left-5.5 top-1 h-2.5 w-2.5 rounded-full bg-brand border border-slate-950" />
                   <div className="flex justify-between text-[9px] text-slate-500 font-semibold">
@@ -1169,13 +1305,13 @@ export default function Dashboard() {
                   title={`Day ${cell.day} - ${cell.status}`}
                   className={`aspect-square rounded-lg flex items-center justify-center text-[9px] font-black transition-all duration-200 select-none
                     ${isCompleted ? "bg-brand cursor-pointer hover:scale-110 hover:brightness-110 active:scale-95" : ""}
-                    ${isMissed ? "bg-rose-500/20 border border-rose-500/40 cursor-not-allowed" : ""}
+                    ${isMissed ? "bg-rose-500/30 border border-rose-500/60 shadow-[0_0_10px_rgba(244,63,94,0.3)] cursor-not-allowed" : ""}
                     ${isActive ? "bg-amber-500/15 border border-amber-400/50 animate-pulse cursor-pointer" : ""}
                     ${isLocked ? "bg-slate-800/50 border border-white/5 cursor-not-allowed" : ""}
                   `}
                 >
                   {isCompleted && <span className="text-white text-[10px]">✓</span>}
-                  {isMissed && <span className="text-rose-400 text-[9px]">✗</span>}
+                  {isMissed && <span className="text-rose-400 font-black text-[11px]">✕</span>}
                   {isActive && <span className="text-amber-300 text-[8px] font-black">{cell.day}</span>}
                   {isLocked && <span className="text-slate-600 text-[8px]">{cell.day}</span>}
                 </div>
@@ -1267,6 +1403,316 @@ export default function Dashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Option 1 XP Deduction Confirmation Modal */}
+      {showXpDeductModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl border border-amber-500/35 bg-slate-900 p-6 text-center shadow-2xl relative space-y-4">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xl font-bold">
+              ⚡
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-slate-100">70 XP Recovery Token Used!</h3>
+              <p className="text-[10px] text-amber-300 font-semibold mt-0.5">Day 11 Challenge Unlocked</p>
+            </div>
+
+            <div className="rounded-xl bg-slate-950/80 border border-white/5 p-3.5 space-y-2 text-left text-xs">
+              <div className="flex justify-between items-center text-slate-400 text-[10px]">
+                <span>Deduction Fee:</span>
+                <span className="font-bold text-rose-400">-70 XP</span>
+              </div>
+              <div className="flex justify-between items-center text-slate-200 font-bold text-[11px] border-t border-white/5 pt-2">
+                <span>Current XP Balance:</span>
+                <span className="text-amber-400">{xp} XP (Lvl {level})</span>
+              </div>
+              <div className="text-[9px] text-emerald-400 font-semibold pt-1 flex items-center gap-1">
+                <span>✓</span> Day 11 Recovery Challenge is now active!
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowXpDeductModal(false);
+                router.push("/day/11");
+              }}
+              className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 py-3 text-xs font-black text-white transition-all shadow-lg shadow-amber-500/20 active:scale-98"
+            >
+              Proceed to Day 11 Task →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* AI Peer Code Audit Modal for Option 2 Recovery */}
+      {showAuditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl border border-brand/30 bg-slate-900 p-6 shadow-2xl space-y-4 relative">
+            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-brand/20 flex items-center justify-center border border-brand/30 text-lg">
+                  🤖
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-slate-100">AI Peer Code Audit & Latency Benchmark</h3>
+                  <p className="text-[9px] text-brand font-bold">Free Streak Recovery Mission · +150 XP</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAuditModal(false)}
+                className="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 rounded-lg bg-white/5"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-300">
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                Run automated code diagnostic checks on ChromaDB vector chunking to restore your Day 11 streak for FREE:
+              </p>
+
+              <div className="rounded-xl bg-slate-950/80 border border-white/5 p-3.5 space-y-2.5">
+                <div className="flex items-center gap-2.5 text-[11px] text-slate-200">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Cosine similarity threshold set to <strong>&gt; 0.85</strong></span>
+                </div>
+                <div className="flex items-center gap-2.5 text-[11px] text-slate-200">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Sliding window text overlap set to <strong>50 tokens</strong></span>
+                </div>
+                <div className="flex items-center gap-2.5 text-[11px] text-slate-200">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Vector query latency benchmark verified <strong>(&lt;95ms)</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-3">
+              <button
+                onClick={() => setShowAuditModal(false)}
+                className="flex-1 rounded-xl border border-white/10 bg-slate-800/50 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  completeAICodeAudit(150);
+                  setShowAuditModal(false);
+                }}
+                className="flex-2 rounded-xl bg-gradient-to-r from-brand to-violet-500 hover:from-brand/90 hover:to-violet-400 py-2.5 text-xs font-black text-white transition-all shadow-lg shadow-brand/20 active:scale-98"
+              >
+                Submit AI Audit & Restore Streak (+150 XP) →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Option 2 Interactive 3-Question Concept Quiz Modal */}
+      {showQuizModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl border border-brand/35 bg-slate-900 p-6 shadow-2xl space-y-4 relative max-h-[90vh] overflow-y-auto no-scrollbar">
+            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-brand/20 flex items-center justify-center border border-brand/30 text-lg">
+                  🧠
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-slate-100">Day 11 Concept Recovery Quiz</h3>
+                  <p className="text-[9px] text-brand font-bold">3 Questions · Free Recovery · +150 XP</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowQuizModal(false)}
+                className="text-slate-400 hover:text-white text-xs font-bold px-2 py-1 rounded-lg bg-white/5"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-300">
+              {/* Question 1 */}
+              <div className="rounded-xl bg-slate-950/70 border border-white/5 p-3.5 space-y-2">
+                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-100">
+                  <span className="h-5 w-5 rounded-full bg-brand/20 text-brand flex items-center justify-center text-[10px] shrink-0 font-extrabold">1</span>
+                  <span>What is the primary role of ChromaDB in a RAG pipeline?</span>
+                </div>
+                <div className="space-y-1.5 pl-7">
+                  {[
+                    "Store & query vector embeddings for semantic similarity search",
+                    "Compress CSS styles and bundle Next.js pages",
+                    "Manage database schema migrations for PostgreSQL"
+                  ].map((opt, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setQuizAnswers(prev => ({ ...prev, 0: idx }))}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[10px] border transition-all ${
+                        quizAnswers[0] === idx 
+                          ? "bg-brand/20 border-brand/40 text-brand font-bold" 
+                          : "bg-slate-900 border-white/5 text-slate-300 hover:bg-slate-800"
+                      }`}
+                    >
+                      {idx === 0 ? "A) " : idx === 1 ? "B) " : "C) "}{opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Question 2 */}
+              <div className="rounded-xl bg-slate-950/70 border border-white/5 p-3.5 space-y-2">
+                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-100">
+                  <span className="h-5 w-5 rounded-full bg-brand/20 text-brand flex items-center justify-center text-[10px] shrink-0 font-extrabold">2</span>
+                  <span>Why do we use text chunk overlap (e.g. 50 tokens) during document splitting?</span>
+                </div>
+                <div className="space-y-1.5 pl-7">
+                  {[
+                    "To preserve semantic context across chunk boundaries",
+                    "To duplicate files and increase database size",
+                    "To reduce HTTP header payload overhead"
+                  ].map((opt, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setQuizAnswers(prev => ({ ...prev, 1: idx }))}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[10px] border transition-all ${
+                        quizAnswers[1] === idx 
+                          ? "bg-brand/20 border-brand/40 text-brand font-bold" 
+                          : "bg-slate-900 border-white/5 text-slate-300 hover:bg-slate-800"
+                      }`}
+                    >
+                      {idx === 0 ? "A) " : idx === 1 ? "B) " : "C) "}{opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Question 3 */}
+              <div className="rounded-xl bg-slate-950/70 border border-white/5 p-3.5 space-y-2">
+                <div className="flex items-center gap-2 text-[11px] font-bold text-slate-100">
+                  <span className="h-5 w-5 rounded-full bg-brand/20 text-brand flex items-center justify-center text-[10px] shrink-0 font-extrabold">3</span>
+                  <span>Which metric is commonly used to measure distance between vector embeddings?</span>
+                </div>
+                <div className="space-y-1.5 pl-7">
+                  {[
+                    "Cosine Similarity / Distance",
+                    "RGB Color spectrum offset",
+                    "TCP Socket port latency"
+                  ].map((opt, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setQuizAnswers(prev => ({ ...prev, 2: idx }))}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[10px] border transition-all ${
+                        quizAnswers[2] === idx 
+                          ? "bg-brand/20 border-brand/40 text-brand font-bold" 
+                          : "bg-slate-900 border-white/5 text-slate-300 hover:bg-slate-800"
+                      }`}
+                    >
+                      {idx === 0 ? "A) " : idx === 1 ? "B) " : "C) "}{opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex gap-3">
+              <button
+                onClick={() => setShowQuizModal(false)}
+                className="flex-1 rounded-xl border border-white/10 bg-slate-800/50 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const correctCount = (quizAnswers[0] === 0 ? 1 : 0) + (quizAnswers[1] === 0 ? 1 : 0) + (quizAnswers[2] === 0 ? 1 : 0);
+                  const scorePercent = Math.round((correctCount / 3) * 100);
+                  const isPassed = correctCount >= 2;
+
+                  setShowQuizModal(false);
+                  setQuizResultModal({
+                    show: true,
+                    score: scorePercent,
+                    passed: isPassed,
+                    correctCount
+                  });
+
+                  if (isPassed) {
+                    setActiveRecoveryOption(2);
+                    addActivityLog("streak_recovery", `Passed Day 11 Vector DB Quiz with ${scorePercent}% score!`);
+                  }
+                }}
+                className="flex-2 rounded-xl bg-gradient-to-r from-brand to-violet-500 hover:from-brand/90 hover:to-violet-400 py-2.5 text-xs font-black text-white transition-all shadow-lg shadow-brand/20 active:scale-98"
+              >
+                Submit Quiz & View Results →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Option 2 Quiz Results Modal */}
+      {quizResultModal?.show && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl border border-brand/35 bg-slate-900 p-6 text-center shadow-2xl relative space-y-4">
+            <div className={`mx-auto flex h-14 w-14 items-center justify-center rounded-full text-2xl font-bold border ${
+              quizResultModal.passed 
+                ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
+                : "bg-rose-500/20 text-rose-400 border-rose-500/30"
+            }`}>
+              {quizResultModal.passed ? "🎉" : "❌"}
+            </div>
+
+            <div>
+              <h3 className="text-base font-black text-slate-100">
+                {quizResultModal.passed ? "Quiz Passed!" : "Quiz Failed"}
+              </h3>
+              <p className={`text-[11px] font-bold mt-1 ${quizResultModal.passed ? "text-emerald-400" : "text-rose-400"}`}>
+                Score: {quizResultModal.score}% ({quizResultModal.correctCount}/3 Correct)
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-slate-950/80 border border-white/5 p-3.5 text-xs text-slate-300 space-y-1.5 text-left">
+              {quizResultModal.passed ? (
+                <>
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold text-[11px]">
+                    <span>✓</span> Minimum 70% score requirement satisfied!
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed">
+                    Option 2 verified. Your Day 11 recovery challenge is unlocked. Complete the task to restore your streak!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 text-rose-400 font-semibold text-[11px]">
+                    <span>⚠</span> You need at least 70% score to pass (minimum 2/3 correct).
+                  </div>
+                  <p className="text-[10px] text-slate-400 leading-relaxed">
+                    Review ChromaDB vector embedding & RAG concepts and attempt the quiz again.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {quizResultModal.passed ? (
+              <button
+                onClick={() => {
+                  setQuizResultModal(null);
+                  router.push("/day/11");
+                }}
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 py-3 text-xs font-black text-white transition-all shadow-lg shadow-emerald-500/20 active:scale-98"
+              >
+                Proceed to Day 11 Task →
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  setQuizResultModal(null);
+                  setShowQuizModal(true);
+                }}
+                className="w-full rounded-xl bg-slate-800 hover:bg-slate-700 py-3 text-xs font-bold text-slate-200 transition-all border border-white/10 active:scale-98"
+              >
+                Try Quiz Again 🔄
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -88,6 +88,12 @@ interface MockStateContextType {
   setIsChallengeCompleted: (b: boolean) => void;
   setIsSubmittedToday: (b: boolean) => void;
   wasStreakRecovered: boolean;
+  chosenRecoveryOption: 1 | 2 | null;
+  setChosenRecoveryOption: (opt: 1 | 2 | null) => void;
+  recoverStreakWithXP: (cost?: number) => void;
+  deductXpForDay11: (cost?: number) => void;
+  completeAICodeAudit: (bonusXp?: number) => void;
+  completeQuizRecovery: (bonusXp?: number) => void;
   submitDay: (repo: string, commit: string, linkedin: string, reflection?: string, explicitDay?: number) => Promise<boolean>;
   resetAll: () => void;
   initializeNewAccountLogs: () => void;
@@ -111,6 +117,7 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
   const [isChallengeCompleted, setIsChallengeCompleted] = useState(false);
   const [isSubmittedToday, setIsSubmittedToday] = useState(false);
   const [wasStreakRecovered, setWasStreakRecovered] = useState(false);
+  const [chosenRecoveryOption, setChosenRecoveryOption] = useState<1 | 2 | null>(null);
   const [streakRefreezes, setStreakRefreezes] = useState(1);
   
   // Profile Hub parameters
@@ -125,15 +132,34 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
     { id: 2, text: "Push vector database embeddings collection", completed: true }
   ]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([
-    { id: 1, type: "profile_update", action: "Profile updated", timestamp: "8/8/2026, 2:25:43 PM" },
-    { id: 2, type: "profile_update", action: "Profile updated", timestamp: "8/8/2026, 2:25:13 PM" },
-    { id: 3, type: "streak_complete", action: "Streak day completed (Day 10)", timestamp: "8/6/2026, 9:15:08 PM" },
-    { id: 4, type: "streak_recovery", action: "Streak recovery freeze used (Day 9)", timestamp: "8/5/2026, 8:45:22 PM" },
-    { id: 5, type: "account_create", action: "Account created successfully", timestamp: "7/28/2026, 7:51:24 PM" }
+    { id: 1, type: "streak_complete", action: "Streak day completed (Day 11)", timestamp: "8/8/2026, 11:30:12 PM" },
+    { id: 2, type: "streak_complete", action: "Streak day completed (Day 10)", timestamp: "8/7/2026, 9:15:08 PM" },
+    { id: 3, type: "streak_recovery", action: "Streak recovery freeze used (Day 9)", timestamp: "8/6/2026, 8:45:22 PM" },
+    { id: 4, type: "account_create", action: "Account created successfully", timestamp: "7/28/2026, 7:51:24 PM" }
   ]);
 
   // Light Mode state
   const [isLightMode, setIsLightMode] = useState(false);
+
+  // Synchronize logged-in user identity from localStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const currentUserStr = localStorage.getItem("abtalks_current_user");
+      if (currentUserStr) {
+        const u = JSON.parse(currentUserStr);
+        if (u.name) setProfileName(u.name);
+        if (u.email) setProfileEmail(u.email);
+        if (u.phone) setProfilePhone(u.phone);
+        if (u.location) setProfileLocation(u.location);
+        if (u.bio !== undefined) setProfileBio(u.bio);
+        if (u.skills !== undefined) setProfileSkills(u.skills);
+        loadUserProgress(u.email);
+      }
+    } catch (e) {
+      console.error("Mount user sync error:", e);
+    }
+  }, []);
 
   // Reflections
   const [reflections, setReflections] = useState<ReflectionEntry[]>([
@@ -336,8 +362,6 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
 
   // Adjust states based on presets — SKIPPED when real saved progress was loaded
   useEffect(() => {
-    // If the user has real persisted progress, never overwrite it with demo presets
-    if (hasSavedProgress.current) return;
     if (isFirstDay) {
       setStreak(0);
       setLevel(1);
@@ -355,6 +379,9 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
       setWasStreakRecovered(false);
       setProfileBio("A Motivated Btech Student");
       setProfileSkills("Java, c, c++, python");
+      setActivityLogs([
+        { id: 1, type: "account_create", action: "Account created successfully", timestamp: "7/28/2026, 7:51:24 PM" }
+      ]);
     } else if (isMissedDay) {
       setStreak(10);
       setLevel(2);
@@ -392,8 +419,6 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
       setLinkedinPost("https://linkedin.com/posts/vajjaaravindh_day12-rag-pipeline-building");
       setStreakRefreezes(1);
       setWasStreakRecovered(false);
-      setProfileName("Vajja Aravindh");
-      setProfileEmail("vajjaaravindh@gmail.com");
     }
   }, [isFirstDay, isMissedDay, isChallengeCompleted]);
 
@@ -522,7 +547,7 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
     if (isRecoverySubmission) {
       setWasStreakRecovered(true);
     }
-    if (isMissedDay) {
+    if (isMissedDay && !isRecoverySubmission) {
       setIsMissedDay(false);
       setStreakRefreezes((prev) => Math.max(0, prev - 1));
     }
@@ -564,11 +589,52 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
     return true;
   };
 
+  const recoverStreakWithXP = (cost: number = 70) => {
+    setXp((prev) => Math.max(0, prev - cost));
+    setStreak(12);
+    setDaysCompletedCount(12);
+    setWasStreakRecovered(true);
+    setIsSubmittedToday(true);
+    setStreakRefreezes((prev) => Math.max(0, prev - 1));
+    addActivityLog("streak_recovery", `Streak recovered using ${cost} XP Token! (-${cost} XP)`);
+  };
+
+  const deductXpForDay11 = (cost: number = 70) => {
+    setXp((prev) => Math.max(0, prev - cost));
+    setChosenRecoveryOption(1);
+    addActivityLog("streak_recovery", `Used ${cost} XP Token to unlock Day 11 Recovery Task (-${cost} XP)`);
+  };
+
+  const completeAICodeAudit = (bonusXp: number = 150) => {
+    setXp((prev) => prev + bonusXp);
+    setStreak(12);
+    setDaysCompletedCount(12);
+    setWasStreakRecovered(true);
+    setIsSubmittedToday(true);
+    setChosenRecoveryOption(2);
+    setStreakRefreezes((prev) => Math.max(0, prev - 1));
+    addActivityLog("streak_recovery", `Completed AI Peer Code Audit & restored streak! (+${bonusXp} XP)`);
+  };
+
+  const completeQuizRecovery = (bonusXp: number = 150) => {
+    setXp((prev) => prev + bonusXp);
+    setStreak(12);
+    setDaysCompletedCount(12);
+    setWasStreakRecovered(true);
+    setIsSubmittedToday(true);
+    setChosenRecoveryOption(2);
+    setStreakRefreezes((prev) => Math.max(0, prev - 1));
+    addActivityLog("streak_recovery", `Passed Day 11 Vector DB Quiz & restored streak! (+${bonusXp} XP)`);
+  };
+
   const resetAll = () => {
+    hasSavedProgress.current = false;
     setIsFirstDay(false);
     setIsMissedDay(false);
     setIsChallengeCompleted(false);
     setIsSubmittedToday(false);
+    setWasStreakRecovered(false);
+    setChosenRecoveryOption(null);
     setStreak(11);
     setLevel(3);
     setXp(1850);
@@ -582,12 +648,33 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
     setWasStreakRecovered(false);
     setProfileBio("A Motivated Btech Student");
     setProfileSkills("Java, c, c++, python");
+    setSubmissions([
+      {
+        day: 11,
+        date: "Aug 7, 2026",
+        githubRepo: "https://github.com/vajja/rag-chromadb",
+        githubCommit: "feat: setup chromadb vector storage",
+        linkedinPost: "https://linkedin.com/posts/vajjaaravindh_day11-vector-db",
+        xpEarned: 150,
+        feedback: "Excellent structure! Clean encapsulation of ChromaDB client.",
+        reflection: "Set up ChromaDB local collection, converted documentation chunks to vector space."
+      },
+      {
+        day: 10,
+        date: "Aug 6, 2026",
+        githubRepo: "https://github.com/vajja/prompt-engineering",
+        githubCommit: "feat: implement few-shot prompt templates for query parsing",
+        linkedinPost: "https://linkedin.com/posts/vajjaaravindh_day10-prompt-engineering",
+        xpEarned: 150,
+        feedback: "Great prompt structuring. The test cases cover complex semantic intents.",
+        reflection: "Constructed few-shot reasoning models using LangChain template formatting."
+      }
+    ]);
     setActivityLogs([
-      { id: 1, type: "profile_update", action: "Profile updated", timestamp: "8/8/2026, 2:25:43 PM" },
-      { id: 2, type: "profile_update", action: "Profile updated", timestamp: "8/8/2026, 2:25:13 PM" },
-      { id: 3, type: "streak_complete", action: "Streak day completed (Day 10)", timestamp: "8/6/2026, 9:15:08 PM" },
-      { id: 4, type: "streak_recovery", action: "Streak recovery freeze used (Day 9)", timestamp: "8/5/2026, 8:45:22 PM" },
-      { id: 5, type: "account_create", action: "Account created successfully", timestamp: "7/28/2026, 7:51:24 PM" }
+      { id: 1, type: "streak_complete", action: "Streak day completed (Day 11)", timestamp: "8/8/2026, 11:30:12 PM" },
+      { id: 2, type: "streak_complete", action: "Streak day completed (Day 10)", timestamp: "8/7/2026, 9:15:08 PM" },
+      { id: 3, type: "streak_recovery", action: "Streak recovery freeze used (Day 9)", timestamp: "8/6/2026, 8:45:22 PM" },
+      { id: 4, type: "account_create", action: "Account created successfully", timestamp: "7/28/2026, 7:51:24 PM" }
     ]);
   };
 
@@ -656,6 +743,12 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
         isChallengeCompleted,
         isSubmittedToday,
         wasStreakRecovered,
+        chosenRecoveryOption,
+        setChosenRecoveryOption,
+        recoverStreakWithXP,
+        deductXpForDay11,
+        completeAICodeAudit,
+        completeQuizRecovery,
         githubRepo,
         githubCommit,
         linkedinPost,

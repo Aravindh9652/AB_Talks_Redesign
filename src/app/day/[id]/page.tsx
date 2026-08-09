@@ -401,9 +401,9 @@ export default function ChallengeDayPage() {
               
               <div className="space-y-1 mt-2 text-xs text-slate-400">
                 <div className="text-brand font-bold text-sm">+{dayData.rewardXp} XP</div>
-                <div>{isRecovery ? "🔥 Your 12-day streak is fully restored!" : "🔥 Your streak continues"}</div>
+                <div>{isRecovery ? "🔥 Your 12-day streak is fully restored!" : isFirst ? "🔥 Your 1-day streak has begun!" : "🔥 Your streak continues"}</div>
                 <div className="font-semibold text-slate-200 mt-1">
-                  12 / 60 completed
+                  {isRecovery ? "12" : dayId} / 60 completed
                 </div>
               </div>
 
