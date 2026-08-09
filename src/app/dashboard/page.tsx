@@ -116,6 +116,7 @@ export default function Dashboard() {
   // Dialog State
   const [showAuditModal, setShowAuditModal] = useState(false);
   const [showQuizModal, setShowQuizModal] = useState(false);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [quizAnswers, setQuizAnswers] = useState<{ [key: number]: number }>({ 0: 0, 1: 0, 2: 0 });
   const [quizResultModal, setQuizResultModal] = useState<{ show: boolean; score: number; passed: boolean; correctCount: number } | null>(null);
   const [activeRecoveryOption, setActiveRecoveryOption] = useState<1 | 2 | null>(null);
@@ -836,9 +837,22 @@ export default function Dashboard() {
 
           <div className="mt-5 pt-4 border-t border-white/5">
             {isChallengeCompleted ? (
-              <span className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/15 py-3 text-xs font-black text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/10">
-                🏅 60-Day Challenge Winner — Graduation Complete ✓
-              </span>
+              <div className="space-y-2.5">
+                <span className="w-full flex flex-col items-center justify-center gap-1 rounded-xl bg-emerald-500/15 p-3 text-center text-xs font-black text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/10">
+                  <span>🏅 60-Day Challenge Completed</span>
+                  <span className="text-[10px] font-extrabold text-emerald-300">
+                    🚀 Indian Dev Cohort 05 Completed &amp; Eligible for Certificate of Completion of 60-Day Challenge ✓
+                  </span>
+                </span>
+
+                <button
+                  onClick={() => setShowCertificateModal(true)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 py-3 text-xs font-black text-slate-950 transition-all active:scale-98 shadow-lg shadow-amber-500/20"
+                >
+                  <Award className="h-4 w-4" />
+                  📜 Generate &amp; Download Official Cohort Certificate
+                </button>
+              </div>
             ) : isSubmittedToday ? (
               <span className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/15 py-3 text-xs font-black text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/10">
                 <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400" />
@@ -1785,6 +1799,173 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+      )}
+      {/* Official Certificate of Completion Modal */}
+      {showCertificateModal && (
+        <>
+          <style dangerouslySetInnerHTML={{ __html: `
+            @media print {
+              @page {
+                size: A4 landscape;
+                margin: 0 !important;
+              }
+              html, body {
+                background-color: #020617 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                overflow: hidden !important;
+              }
+              body * {
+                visibility: hidden !important;
+              }
+              #certificate-modal-container, #certificate-modal-container * {
+                visibility: visible !important;
+              }
+              #certificate-modal-container {
+                position: fixed !important;
+                inset: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 2.5rem !important;
+                background-color: #020617 !important;
+                border: none !important;
+                box-shadow: none !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                page-break-inside: avoid !important;
+                page-break-after: avoid !important;
+              }
+              .print-no-show {
+                display: none !important;
+              }
+              #certificate-print-card {
+                width: 100% !important;
+                max-width: 900px !important;
+                border: 4px solid #f59e0b !important;
+                border-radius: 1.5rem !important;
+                background: #020617 !important;
+                box-shadow: none !important;
+                padding: 2.5rem !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+            }
+          ` }} />
+
+          <div id="certificate-modal-container" className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 animate-in fade-in duration-200">
+            <div id="certificate-print-card" className="w-full max-w-2xl rounded-3xl border-4 border-amber-500/40 bg-slate-950 p-8 shadow-2xl space-y-6 relative overflow-hidden">
+              
+              {/* Watermark background glow */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-72 w-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              {/* Modal Header Controls */}
+              <div className="flex justify-between items-center print-no-show border-b border-white/10 pb-4">
+                <span className="text-xs font-black text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                  <Award className="h-4 w-4 text-amber-400" />
+                  ABTalks Official Cohort Certification
+                </span>
+                <button
+                  onClick={() => setShowCertificateModal(false)}
+                  className="text-slate-400 hover:text-white text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* CERTIFICATE CANVAS FRAME */}
+              <div className="border-2 border-amber-500/30 rounded-2xl p-6 bg-slate-950 space-y-5 text-center relative">
+                
+                {/* Header Badge */}
+                <div className="flex justify-center items-center gap-2">
+                  <div className="h-10 w-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-xl text-amber-400">
+                    🏆
+                  </div>
+                </div>
+
+                <div>
+                  <h1 className="text-xl sm:text-2xl font-black uppercase tracking-widest text-amber-400">
+                    Certificate of Completion
+                  </h1>
+                  <p className="text-[10px] text-amber-400/80 font-bold uppercase tracking-wider mt-1">
+                    ABTalks Fullstack &amp; AI Engineering Cohort
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-xs text-slate-400 italic">This is proudly presented to</p>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-100 underline decoration-amber-500/50 underline-offset-8">
+                    {profileName}
+                  </h2>
+                </div>
+
+                <p className="text-xs text-slate-300 max-w-lg mx-auto leading-relaxed">
+                  For successfully completing all <strong>60 Days</strong> of intensive fullstack software development, AI model integration, and vector RAG engineering in <strong>Indian Dev Cohort 05</strong>.
+                </p>
+
+                {/* Stats Metadata Grid */}
+                <div className="grid grid-cols-4 gap-2 pt-2 border-t border-b border-white/10 py-3 text-center">
+                  <div>
+                    <span className="text-[8px] text-slate-500 font-bold uppercase block">Challenges</span>
+                    <span className="text-xs font-black text-emerald-400">60 / 60 Done</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] text-slate-500 font-bold uppercase block">Streak</span>
+                    <span className="text-xs font-black text-amber-400">🔥 60 Days</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] text-slate-500 font-bold uppercase block">XP Earned</span>
+                    <span className="text-xs font-black text-brand">⚡ 12,000 XP</span>
+                  </div>
+                  <div>
+                    <span className="text-[8px] text-slate-500 font-bold uppercase block">Match Score</span>
+                    <span className="text-xs font-black text-sky-400">98% SDE</span>
+                  </div>
+                </div>
+
+                {/* Verification & Signatures */}
+                <div className="flex justify-between items-end pt-3 text-left">
+                  <div>
+                    <span className="text-[8px] text-slate-500 block uppercase font-bold">Verification ID</span>
+                    <span className="text-[10px] font-mono font-bold text-amber-400/90">CERT-ABTALKS-2026-6060</span>
+                    <span className="text-[8px] text-slate-500 block mt-0.5">Issued: August 9, 2026</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs font-serif italic text-amber-300 border-b border-amber-500/40 pb-0.5">
+                      ABTalks Cohort Board
+                    </div>
+                    <span className="text-[8px] text-slate-400 font-bold block mt-0.5">Authorized Engineering Lead</span>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 print-no-show pt-2">
+                <button
+                  onClick={() => setShowCertificateModal(false)}
+                  className="flex-1 rounded-xl border border-white/10 bg-slate-800/50 py-3 text-xs font-bold text-slate-300 hover:bg-slate-800 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className="flex-2 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 py-3 text-xs font-black text-slate-950 transition-all active:scale-98 shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Download / Save as PDF Certificate →
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
