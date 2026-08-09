@@ -61,7 +61,7 @@ interface MockStateContextType {
   
   addGoal: (text: string) => void;
   toggleGoal: (id: number) => void;
-  updateProfile: (name: string, email: string, phone: string, location: string, bio: string, skills: string) => void;
+  updateProfile: (name: string, email: string, phone: string, location: string, bio: string, skills: string, github?: string, linkedin?: string) => void;
   addActivityLog: (type: ActivityLog["type"], action: string) => void;
 
   // Light/Dark mode
@@ -470,21 +470,23 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const updateProfile = (name: string, email: string, phone: string, location: string, bio: string, skills: string) => {
+  const updateProfile = (name: string, email: string, phone: string, location: string, bio: string, skills: string, github?: string, linkedin?: string) => {
     setProfileName(name);
     setProfileEmail(email);
     setProfilePhone(phone);
     setProfileLocation(location);
     setProfileBio(bio);
     setProfileSkills(skills);
+    if (github) setGithubRepo(github);
+    if (linkedin) setLinkedinPost(linkedin);
 
     if (typeof window !== "undefined") {
       localStorage.setItem("abtalks_current_user", JSON.stringify({
-        name, email, phone, location, bio, skills
+        name, email, phone, location, bio, skills, githubRepo: github || githubRepo, linkedinPost: linkedin || linkedinPost
       }));
     }
 
-    if (bio || skills) {
+    if (bio || skills || github || linkedin) {
       addActivityLog("profile_update", "Profile updated");
     }
   };

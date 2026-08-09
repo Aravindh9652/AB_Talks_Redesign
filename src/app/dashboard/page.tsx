@@ -99,6 +99,8 @@ export default function Dashboard() {
     profileLocation,
     profileBio,
     profileSkills,
+    githubRepo,
+    linkedinPost,
     goals,
     activityLogs,
     addGoal,
@@ -134,9 +136,11 @@ export default function Dashboard() {
   const [editLocation, setEditLocation] = useState(profileLocation);
   const [editBio, setEditBio] = useState(profileBio);
   const [editSkills, setEditSkills] = useState(profileSkills);
+  const [editGithub, setEditGithub] = useState(githubRepo);
+  const [editLinkedin, setEditLinkedin] = useState(linkedinPost);
+  const [isEmptyProfilePreset, setIsEmptyProfilePreset] = useState(false);
   const [isSavedAlert, setIsSavedAlert] = useState(false);
 
-  // Sync edits when context changes
   useEffect(() => {
     setEditName(profileName);
     setEditEmail(profileEmail);
@@ -144,7 +148,14 @@ export default function Dashboard() {
     setEditLocation(profileLocation);
     setEditBio(profileBio);
     setEditSkills(profileSkills);
-  }, [profileName, profileEmail, profilePhone, profileLocation, profileBio, profileSkills]);
+    if (isEmptyProfilePreset && !profileBio && !profileSkills) {
+      setEditGithub("");
+      setEditLinkedin("");
+    } else {
+      setEditGithub(githubRepo);
+      setEditLinkedin(linkedinPost);
+    }
+  }, [profileName, profileEmail, profilePhone, profileLocation, profileBio, profileSkills, githubRepo, linkedinPost, isEmptyProfilePreset]);
 
   // Goal input
   const [newGoalText, setNewGoalText] = useState("");
@@ -190,7 +201,9 @@ export default function Dashboard() {
     e.preventDefault();
     const finalBio = editBio.trim() || "A Motivated Btech Student";
     const finalSkills = editSkills.trim() || "Java, C, C++, Python";
-    updateProfile(editName, editEmail, editPhone, editLocation, finalBio, finalSkills);
+    const finalGithub = editGithub.trim() || githubRepo;
+    const finalLinkedin = editLinkedin.trim() || linkedinPost;
+    updateProfile(editName, editEmail, editPhone, editLocation, finalBio, finalSkills, finalGithub, finalLinkedin);
     setIsSavedAlert(true);
     setTimeout(() => {
       setIsSavedAlert(false);
@@ -406,11 +419,12 @@ export default function Dashboard() {
                 setIsFirstDay(false); 
                 setIsMissedDay(false); 
                 setIsChallengeCompleted(false); 
+                setIsEmptyProfilePreset(false);
                 resetAll(); 
-                updateProfile(profileName, profileEmail, profilePhone, profileLocation, "A Motivated Btech Student", "Java, c, c++, python");
+                updateProfile(profileName, profileEmail, profilePhone, profileLocation, "A Motivated Btech Student", "Java, c, c++, python", editGithub, editLinkedin);
               }}
               className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[11px] font-semibold transition-all border
-                ${!isFirstDay && !isMissedDay && !isChallengeCompleted && (profileBio || profileSkills)
+                ${!isFirstDay && !isMissedDay && !isChallengeCompleted && !isEmptyProfilePreset
                   ? "bg-brand/15 border-brand/30 text-brand"
                   : "bg-slate-950/50 border-white/5 text-slate-300 hover:bg-slate-800/60"}`}
             >
@@ -430,6 +444,7 @@ export default function Dashboard() {
                 setIsFirstDay(true); 
                 setIsMissedDay(false); 
                 setIsChallengeCompleted(false); 
+                setIsEmptyProfilePreset(false);
                 updateProfile(profileName, profileEmail, profilePhone, profileLocation, "A Motivated Btech Student", "Java, c, c++, python");
               }}
               className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[11px] font-semibold transition-all border
@@ -453,6 +468,7 @@ export default function Dashboard() {
                 setIsMissedDay(true); 
                 setIsFirstDay(false); 
                 setIsChallengeCompleted(false); 
+                setIsEmptyProfilePreset(false);
                 updateProfile(profileName, profileEmail, profilePhone, profileLocation, "A Motivated Btech Student", "Java, c, c++, python");
               }}
               className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[11px] font-semibold transition-all border
@@ -472,16 +488,18 @@ export default function Dashboard() {
 
             {/* Empty Profile */}
             <button
-              onClick={() => {
-                setIsFirstDay(false); setIsMissedDay(false); setIsChallengeCompleted(false);
-                updateProfile(
-                  profileName, profileEmail, profilePhone,
-                  profileLocation, "", ""
-                );
+              onClick={() => { 
+                setIsFirstDay(false); 
+                setIsMissedDay(false); 
+                setIsChallengeCompleted(false); 
+                setIsEmptyProfilePreset(true);
+                setEditGithub("");
+                setEditLinkedin("");
+                updateProfile(profileName, profileEmail, profilePhone, profileLocation, "", "", "", "");
               }}
               className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-[11px] font-semibold transition-all border
-                ${!isFirstDay && !isMissedDay && !isChallengeCompleted && !profileBio && !profileSkills
-                  ? "bg-sky-500/15 border-sky-500/30 text-sky-300"
+                ${!isFirstDay && !isMissedDay && !isChallengeCompleted && isEmptyProfilePreset
+                  ? "bg-purple-500/15 border-purple-500/30 text-purple-300"
                   : "bg-slate-950/50 border-white/5 text-slate-300 hover:bg-slate-800/60"}`}
             >
               <span className="flex items-center gap-2">
@@ -881,29 +899,62 @@ export default function Dashboard() {
               <div className="space-y-4">
                 {/* EDGE CASE 3: Empty profile CTA — ONLY when bio & skills are empty */}
                 {(!profileBio && !profileSkills) ? (
-                  <div className="rounded-xl border border-brand/20 bg-gradient-to-br from-brand/10 to-slate-900/60 p-4 space-y-3">
-                    <div className="flex gap-3 items-start">
-                      <div className="h-9 w-9 rounded-xl bg-brand/15 flex items-center justify-center shrink-0 text-base">👤</div>
-                      <div>
-                        <h4 className="text-xs font-extrabold text-slate-100">Complete your profile</h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
-                          Add your GitHub and LinkedIn to unlock your public learner profile and recruiter match score.
+                  <div className="rounded-2xl border border-brand/30 bg-gradient-to-br from-brand/15 via-violet-500/10 to-slate-900/90 p-4.5 space-y-3.5 shadow-xl relative overflow-hidden">
+                    <div className="absolute top-0 right-0 h-24 w-24 bg-brand/10 rounded-full blur-xl pointer-events-none" />
+                    
+                    {/* Header */}
+                    <div className="flex gap-3 items-start relative z-10">
+                      <div className="h-10 w-10 rounded-xl bg-brand/20 border border-brand/35 flex items-center justify-center shrink-0 text-lg shadow-inner">
+                        👤
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-xs font-black text-slate-100">Complete your profile</h4>
+                          <span className="text-[9px] font-black text-brand bg-brand/15 border border-brand/30 px-2 py-0.5 rounded-full">
+                            0% Setup
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-300 mt-0.5 leading-relaxed">
+                          Add your bio &amp; tech stack to unlock your public engineer portfolio and recruiter match score.
                         </p>
                       </div>
                     </div>
-                    <div className="space-y-1.5">
-                      {["Add your bio", "Link GitHub", "Link LinkedIn"].map((step) => (
-                        <div key={step} className="flex items-center gap-2 text-[10px] text-slate-400">
-                          <div className="h-1.5 w-1.5 rounded-full bg-brand/50 shrink-0" />
-                          {step}
-                        </div>
-                      ))}
+
+                    {/* Progress Bar */}
+                    <div className="space-y-1 relative z-10">
+                      <div className="flex justify-between text-[9px] font-bold text-slate-400">
+                        <span>Profile Strength</span>
+                        <span className="text-brand">0 / 3 completed</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-slate-950 overflow-hidden border border-white/5">
+                        <div className="h-full w-0 bg-gradient-to-r from-brand to-violet-400 transition-all duration-500" />
+                      </div>
                     </div>
+
+                    {/* Steps checklist */}
+                    <div className="grid grid-cols-3 gap-2 relative z-10 pt-1">
+                      <div className="rounded-xl bg-slate-950/60 border border-white/5 p-2 text-center space-y-1">
+                        <span className="text-xs">✏️</span>
+                        <p className="text-[9px] font-extrabold text-slate-300">Add Bio</p>
+                        <span className="text-[8px] text-amber-400 font-bold block">Pending</span>
+                      </div>
+                      <div className="rounded-xl bg-slate-950/60 border border-white/5 p-2 text-center space-y-1">
+                        <span className="text-xs">💻</span>
+                        <p className="text-[9px] font-extrabold text-slate-300">Tech Stack</p>
+                        <span className="text-[8px] text-amber-400 font-bold block">Pending</span>
+                      </div>
+                      <div className="rounded-xl bg-slate-950/60 border border-white/5 p-2 text-center space-y-1">
+                        <span className="text-xs">🔗</span>
+                        <p className="text-[9px] font-extrabold text-slate-300">Social Links</p>
+                        <span className="text-[8px] text-amber-400 font-bold block">Pending</span>
+                      </div>
+                    </div>
+
                     <button
                       onClick={() => setActiveTab("profile")}
-                      className="w-full rounded-xl bg-brand py-2.5 text-[11px] font-bold text-white hover:bg-brand/90 transition-all active:scale-98 flex items-center justify-center gap-1.5"
+                      className="w-full rounded-xl bg-gradient-to-r from-brand to-violet-600 hover:from-brand/90 hover:to-violet-500 py-3 text-xs font-black text-white transition-all active:scale-98 flex items-center justify-center gap-1.5 shadow-lg shadow-brand/20 relative z-10"
                     >
-                      Complete Profile →
+                      🚀 Complete Profile &amp; Unlock Portfolio →
                     </button>
                   </div>
                 ) : (
@@ -1029,6 +1080,28 @@ export default function Dashboard() {
                       type="text" 
                       value={editSkills}
                       onChange={(e) => setEditSkills(e.target.value)}
+                      className="w-full rounded-xl bg-slate-950 border border-white/10 px-3 py-2 text-slate-200 focus:outline-none focus:border-brand"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">GitHub Profile URL</label>
+                    <input 
+                      type="text" 
+                      value={editGithub}
+                      onChange={(e) => setEditGithub(e.target.value)}
+                      placeholder="https://github.com/username"
+                      className="w-full rounded-xl bg-slate-950 border border-white/10 px-3 py-2 text-slate-200 focus:outline-none focus:border-brand"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">LinkedIn Profile URL</label>
+                    <input 
+                      type="text" 
+                      value={editLinkedin}
+                      onChange={(e) => setEditLinkedin(e.target.value)}
+                      placeholder="https://linkedin.com/in/username"
                       className="w-full rounded-xl bg-slate-950 border border-white/10 px-3 py-2 text-slate-200 focus:outline-none focus:border-brand"
                     />
                   </div>
