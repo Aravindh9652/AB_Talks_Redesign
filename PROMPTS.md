@@ -6,6 +6,8 @@ This document provides a complete, chronological log of all AI prompts and engin
 
 ## Prompt 1 — Design System & Color Palette Architecture
 
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
+
 ```text
 Act as an elite lead product designer from Stripe or Apple. I need to redesign the ABTalks 60-day coding challenge dashboard. The platform helps Indian college students build coding consistency by pushing a daily GitHub commit and writing a LinkedIn post. Most users access it on their phones late at night.
 
@@ -14,7 +16,9 @@ Let's start by defining a premium, dark-mode design system. We need custom glass
 
 ---
 
-## Prompt 2 — Mock State Context & Judge State Controller
+## Prompt 2 — Edge Cases & Mock State Management
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
 I want to make sure we support every potential edge case in the hackathon. Let's build a client-side React Context (`MockStateContext`) that holds mock data for:
@@ -28,7 +32,9 @@ We should also create a floating "Judge State Controller" panel component that r
 
 ---
 
-## Prompt 3 — Landing Page (/) Mobile-First Redesign
+## Prompt 3 — Landing Page (/) Redesign
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
 Let's build the main Landing Page (`/`). It needs to be extremely inspirational, convincing a student to commit to a 60-day challenge in seconds.
@@ -45,7 +51,9 @@ Make it fully mobile-first (responsive at 390px, one-thumb usability).
 
 ---
 
-## Prompt 4 — Student Dashboard (/dashboard) Interface
+## Prompt 4 — Student Dashboard (/dashboard) Redesign
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
 Now let's build the Student Dashboard page (`/dashboard`). It should feel like a motivational dashboard, not an admin panel.
@@ -63,7 +71,9 @@ Keep the design extremely clean, dark, and highly readable on 390px viewport.
 
 ---
 
-## Prompt 5 — Challenge Mission Route (/day/12) Implementation
+## Prompt 5 — Challenge Mission Route (/day/12)
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
 Let's implement the Challenge Day page `/day/12`. Treat the day's challenge like a "Mission".
@@ -79,7 +89,9 @@ Include:
 
 ---
 
-## Prompt 6 — Codebase Audit & Required Routes Inspection
+## Prompt 6 — Codebase Inspection & Verification
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
 We are continuing an existing ABTalks hackathon project.
@@ -96,15 +108,6 @@ Required routes:
 
 The project is mobile-first and judges will evaluate it at 390px width.
 
-Already implemented:
-1. Landing page
-2. Student dashboard
-3. Challenge Day 12
-4. First-day edge case
-5. Missed-day edge case
-6. Streak recovery experience
-7. Empty-profile edge case
-
 First:
 1. Inspect the entire repository.
 2. Understand the current architecture.
@@ -119,22 +122,26 @@ Do not modify code yet. Wait for my next instruction.
 
 ---
 
-## Prompt 7 — 60-Day Habit Matrix Interactive Submission Lookup Fix
+## Prompt 7 — 60-Day Matrix Submission Lookup
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
-In all modes in Jump State Controller (Default Day 12, First Day, Missed Day, Empty Profile, Complete 60 Days), in the 60-Day Matrix:
-- Default Day 12: Before day 12 or up to day 12, if I click any completed day it should show the submission info popup of that day.
-- First Day: If I submit on first day then click day 1, it should show the submission popup.
-- Missed Day: For all completed days up to streak day, clicking should show the submission info.
+In all modes in Jump State Controller (Default Day 12, First Day, Missed Day, Empty Profile, Complete 60 Days), whenever I click on any day in the 60-Day Matrix:
+- Default Day 12: Before day 12 or up to day 12, if I click it should show the submission info of that day.
+- First Day: If I submit on first day then click it should show.
+- Missed Day: Except missed day & remaining day, it should show submission info for all completed days up to streak day.
 - Empty Profile: Clicking completed days should show submission info.
-- Complete 60 Days: Clicking ANY day (1 through 60) must show submission details for that day.
+- Complete 60 Days: It must show submission info for all 60 days.
 
 Please change this only and do not change anything else.
 ```
 
 ---
 
-## Prompt 8 — Production Deployment Setup & Vercel Configuration
+## Prompt 8 — Production Deployment Setup
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
 Now everything is up to date, so please help me deploy this project to Vercel production and link it with GitHub.
@@ -142,16 +149,113 @@ Now everything is up to date, so please help me deploy this project to Vercel pr
 
 ---
 
-## Prompt 9 — Authentication Form Field Reset & Logout Session Cleanup
+## Prompt 9 — Authentication Form Field Reset & Session Cleanup
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
-When I open the deployed link, everything is okay, but there is a problem with Login & Sign Up. For example, if I create an account & login, and then logout, when I click Login again, old account details or pre-filled values appear in the fields. Please clean this up so opening Login or Sign Up gives a completely fresh, empty form, and then deploy to Vercel after committing to git.
+When I open the deployed link, if I create an account & login and then logout, when I click Login again, old account details are appearing pre-filled. Please fix this so opening Login or Sign Up gives a clean form with empty input fields every time, and then deploy to Vercel after committing.
 ```
 
 ---
 
-## Prompt 10 — Browser Credential Anti-Autofill & Password Manager Protection
+## Prompt 10 — Browser Credential Anti-Autofill Protection
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
 
 ```text
-See again coming, when I open Login, saved browser credentials (like siva@gmail.com and saved password) are being auto-filled by the browser with blue background tint. Do not let the browser pre-fill saved passwords on open. Keep inputs completely clean on launch, commit to git, and deploy to Vercel.
+When opening the Login modal, saved browser credentials (like siva@gmail.com) are being auto-filled by Chrome/Edge password managers. Please add trap fields, dynamic keys, and anti-autofill rules so browser password managers never pre-fill saved passwords, commit to git, and deploy to Vercel.
+```
+
+---
+
+## Prompt 11 — First Day & Missed Day Edge Cases
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
+
+```text
+Handle the first-day and missed-day states required by the ABTalks hackathon brief.
+
+First Day:
+- Show 0-day streak appropriately.
+- Make the experience motivational.
+- Show Day 1 as the starting point.
+
+Missed Day:
+- Clearly communicate that a challenge day was missed.
+- Provide a thoughtful streak recovery experience.
+- Do not leave the dashboard in a broken or empty state.
+
+Do not change unrelated functionality.
+```
+
+---
+
+## Prompt 12 — Streak Recovery
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
+
+```text
+Improve the missed-day streak recovery experience.
+
+Give the student two recovery choices:
+1. Spend XP / tokens to recover the missed challenge.
+2. Complete an additional recovery mission (e.g. Peer AI Code Audit or Vector DB Quiz) instead of spending XP.
+
+Make both choices clear and explain their consequences.
+Keep the experience supportive rather than punitive.
+```
+
+---
+
+## Prompt 13 — Empty Profile Edge Case
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
+
+```text
+Handle the empty-profile edge case.
+
+When profile information is missing, do not display broken, empty, or meaningless values.
+
+Create a polished onboarding state that encourages the student to complete their profile and connect their relevant information.
+
+Keep the experience consistent with the existing ABTalks design.
+Do not change unrelated functionality.
+```
+
+---
+
+## Prompt 14 — Complete Profile Experience
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
+
+```text
+Improve the complete-profile experience.
+
+Make profile completion feel like part of the student's 60-day learning journey rather than a generic settings form.
+
+Show clear progress toward profile completion and provide a strong call to action.
+
+Preserve the existing visual language and mobile-first design.
+```
+
+---
+
+## Prompt 15 — 60-Day Matrix Update
+
+> Reconstructed from the development instructions available after the original Antigravity conversation history was lost.
+
+```text
+Improve the 60-Day Habit Matrix.
+
+Clearly distinguish:
+- Completed days
+- Current day
+- Upcoming days
+- Missed days
+- Locked days
+
+Maintain the existing interaction where completed days can show their submission information.
+
+Make sure the matrix remains usable at a 390px mobile viewport.
 ```
