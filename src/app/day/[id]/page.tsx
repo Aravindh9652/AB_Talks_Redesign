@@ -45,6 +45,7 @@ export default function ChallengeDayPage() {
   const router = useRouter();
   const dayId = params?.id ? String(params.id) : "12";
   const isFirst = dayId === "1";
+  const isRecovery = dayId === "11";
   
   const { 
     streak, 
@@ -65,6 +66,8 @@ export default function ChallengeDayPage() {
   const [reflectionInput, setReflectionInput] = useState(
     isFirst 
       ? "Initialized my public repository workspace and updated my learner bio profile credentials!" 
+      : isRecovery
+      ? "Completed Day 11 recovery task! Configured ChromaDB vector client and sliding window text chunking strategy."
       : "Implemented task schema model, set up Express routing paths, and ran local validation tests using cURL queries."
   );
 
@@ -109,7 +112,7 @@ export default function ChallengeDayPage() {
 
     setIsSubmitting(true);
     try {
-      await submitDay(repoInput, commitInput, linkedinInput, reflectionInput);
+      await submitDay(repoInput, commitInput, linkedinInput, reflectionInput, isRecovery ? 11 : undefined);
       setSuccessAnimation(true);
     } catch (err) {
       setErrorMsg("There was a connection error validating your commit. Please try again.");
@@ -135,6 +138,23 @@ export default function ChallengeDayPage() {
       "Commit your initial baseline README files",
       "Add GitHub & LinkedIn links to your dashboard",
       "Submit Day 1 proof of build"
+    ]
+  } : isRecovery ? {
+    title: "Day 11 Recovery — Setup ChromaDB Vector Storage",
+    difficulty: "Recovery Mission",
+    timeEst: "~10 min",
+    rewardXp: 200,
+    goal: "Complete this 10-minute conceptual recovery task to restore your Day 11 momentum and unfreeze your streak!",
+    learn: [
+      "ChromaDB local vector collections",
+      "Sliding window document chunking",
+      "Streak recovery verification"
+    ],
+    mission: [
+      "Initialize ChromaDB local storage client",
+      "Split documentation chunks with 50-token overlaps",
+      "Verify semantic similarity search query latency",
+      "Submit Day 11 recovery proof to unfreeze your streak"
     ]
   } : {
     title: "Build a REST API",
@@ -332,11 +352,16 @@ export default function ChallengeDayPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3 text-xs font-bold text-white transition-all hover:bg-brand/90 hover:scale-102 active:scale-98 disabled:opacity-60"
+                className={`w-full flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold text-white transition-all hover:scale-102 active:scale-98 disabled:opacity-60
+                  ${isRecovery ? "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 shadow-amber-500/20" : "bg-brand hover:bg-brand/90 shadow-brand/10"}`}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" /> Verifying Commit...
+                  </>
+                ) : isRecovery ? (
+                  <>
+                    🔥 Submit Day 11 Recovery & Restore Streak
                   </>
                 ) : (
                   <>
@@ -371,14 +396,14 @@ export default function ChallengeDayPage() {
               </div>
               
               <h2 className="text-base font-extrabold text-slate-100 mt-4">
-                🎉 Day {dayId} Complete!
+                {isRecovery ? "🎉 Day 11 Streak Recovered!" : `🎉 Day ${dayId} Complete!`}
               </h2>
               
               <div className="space-y-1 mt-2 text-xs text-slate-400">
                 <div className="text-brand font-bold text-sm">+{dayData.rewardXp} XP</div>
-                <div>🔥 Your streak continues</div>
+                <div>{isRecovery ? "🔥 Your 12-day streak is fully restored!" : "🔥 Your streak continues"}</div>
                 <div className="font-semibold text-slate-200 mt-1">
-                  {daysCompletedCount + 1} / 60 completed
+                  12 / 60 completed
                 </div>
               </div>
 
@@ -389,7 +414,7 @@ export default function ChallengeDayPage() {
                 }}
                 className="mt-6 w-full rounded-xl bg-brand hover:bg-brand/90 py-2.5 text-xs font-bold text-white transition-all active:scale-98 shadow-lg shadow-brand/10"
               >
-                Continue to Day {parseInt(dayId) + 1}
+                Return to Dashboard
               </button>
             </motion.div>
           </motion.div>

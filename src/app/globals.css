@@ -1,10 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-slate-950: #020617;
-  --color-slate-900: #0f172a;
-  --color-slate-800: #1e293b;
-  --color-slate-700: #334155;
+  --color-slate-950: var(--color-slate-950);
+  --color-slate-900: var(--color-slate-900);
+  --color-slate-800: var(--color-slate-800);
+  --color-slate-700: var(--color-slate-700);
+  --color-slate-600: var(--color-slate-600);
+  --color-slate-500: var(--color-slate-500);
+  --color-slate-400: var(--color-slate-400);
+  --color-slate-300: var(--color-slate-300);
+  --color-slate-200: var(--color-slate-200);
+  --color-slate-100: var(--color-slate-100);
   
   --color-brand: var(--brand-primary);
   --color-brand-acc: var(--brand-accent);
@@ -15,6 +21,17 @@
 }
 
 :root {
+  --color-slate-950: #020617;
+  --color-slate-900: #0f172a;
+  --color-slate-800: #1e293b;
+  --color-slate-700: #334155;
+  --color-slate-600: #475569;
+  --color-slate-500: #64748b;
+  --color-slate-400: #94a3b8;
+  --color-slate-300: #cbd5e1;
+  --color-slate-200: #e2e8f0;
+  --color-slate-100: #f8fafc;
+
   --brand-primary: #8b5cf6;
   --brand-accent: rgba(139, 92, 246, 0.1);
   --brand-glow: rgba(139, 92, 246, 0.2);
@@ -28,6 +45,17 @@
 }
 
 .light-mode {
+  --color-slate-950: #f8fafc;
+  --color-slate-900: #ffffff;
+  --color-slate-800: #e2e8f0;
+  --color-slate-700: #cbd5e1;
+  --color-slate-600: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-400: #475569;
+  --color-slate-300: #334155;
+  --color-slate-200: #1e293b;
+  --color-slate-100: #090d16;
+
   --brand-primary: #7c3aed;
   --brand-accent: rgba(124, 58, 237, 0.08);
   --brand-glow: rgba(124, 58, 237, 0.15);
