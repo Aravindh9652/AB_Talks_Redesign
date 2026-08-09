@@ -1,49 +1,86 @@
-# ABTalks Hackathon Redesign
+# ABTalks Redesign — 60-Day Code Challenge Platform
 
-A world-class, premium, mobile-first redesign of the ABTalks 60-Day coding challenge dashboard. Inspired by Apple, Stripe, Linear, and Notion.
+A premium, mobile-first redesign of the **ABTalks 60-Day Coding Challenge** platform for Indian college students. Built with Next.js 16, TypeScript, Tailwind CSS v4, Framer Motion, and engineered specifically for mobile builders (evaluated at **390px viewport**).
 
-## Route Map
+---
 
-Provide these routes exactly for automated screenshot capture (at 390px viewport):
-```
-/
-/dashboard
-/day/12
-```
+## 🌐 Live Production & Resources
 
-## Features
+- 🚀 **Live Production Application**: [https://abtalks-redesign-ruddy.vercel.app](https://abtalks-redesign-ruddy.vercel.app)
+- 📁 **Public GitHub Repository**: [https://github.com/Aravindh9652/AB_Talks_Redesign](https://github.com/Aravindh9652/AB_Talks_Redesign)
+- 📝 **AI Usage Log (`PROMPTS.md`)**: [https://github.com/Aravindh9652/AB_Talks_Redesign/blob/main/PROMPTS.md](https://github.com/Aravindh9652/AB_Talks_Redesign/blob/main/PROMPTS.md)
 
-- **Mobile-First UX (390px)**: Engineered specifically for late-night mobile builders. Responsive, thumb-friendly navigation, large touch targets, and beautiful typography.
-- **Design Philosophy**: Deep Slate themes with glassmorphic modals, floating ambient violet/indigo grids, linear gradient borders, and smooth micro-interactions.
-- **Dynamic State Engine & Judge Controller**: A floating action panel at the bottom-right allows judges and reviewers to instantly hot-swap between:
-  - **Default Day 12**: Active streak, partial progress, connected accounts, and pending day submission.
-  - **First Day**: 0-day clean slate, disconnect state, custom setup guides.
-  - **Missed Day**: broken streak alert, recovery freeze panel, custom motivators.
-  - **Challenge Completed**: 60/60 day victory screen, ultimate recruiter matching status.
-- **Recruiter Visibility Score Meter**: An interactive speedometer indicating your visibility factor to premium tech companies based on code consistency.
-- **AI Coach Insights**: Custom learning recommendations that dynamically adapt based on the selected edge case.
-- **Interactive Habit Matrix**: A 60-day visual contribution grid (contribution heatmap) mapping out locked, completed, active, and missed days.
-- **Animated Submissions**: Forms containing validation, submission pending spinners, soundless confetti execution, and XP level advancement metrics.
+---
 
-## Tech Stack
+## 🗺️ Required Route Map (390px Viewport)
 
-- **Framework**: Next.js 16 (App Router)
+Judges can open and test the mandatory hackathon routes directly on the live deployed web app:
+
+| Route Path | Description | Live Link |
+| :--- | :--- | :--- |
+| **`/`** | Landing Page — Apple-style Hero, CLI terminal mockup, trust section, timeline & FAQ | [Open Landing Page](https://abtalks-redesign-ruddy.vercel.app/) |
+| **`/dashboard`** | Student Dashboard — Daily task, Recruiter Score, 60-day matrix, Profile Hub & Activity logs | [Open Dashboard](https://abtalks-redesign-ruddy.vercel.app/dashboard) |
+| **`/day/12`** | Challenge Day 12 — Mission overview, resource guides, proof-of-work submission form & celebration overlay | [Open Day 12 Challenge](https://abtalks-redesign-ruddy.vercel.app/day/12) |
+
+---
+
+## ⚡ Floating Judge State Controller
+
+To facilitate instant hackathon evaluation across all mandatory edge cases without editing any code or altering databases:
+
+A **floating action widget** is anchored in the bottom-right corner of the live web app (`/dashboard`). Clicking this widget lets reviewers hot-swap between edge case presets in real time:
+
+1. ⚡ **Default Day 12**: Active 11-day streak, pending Day 12 RAG Pipeline task, connected developer links.
+2. 🚀 **First Day (0 Streak)**: Clean slate onboarding, 0 streak state, setup guides, initial baseline task.
+3. ⚠️ **Missed Day (Streak Paused)**: Streak broken alert, freeze token status, and supportive recovery options.
+4. 👤 **Empty Profile Onboarding**: Polished incomplete profile state with step-by-step portfolio completion CTA.
+5. 🏅 **Completed (60/60)**: 60-day cohort winner state, certificate download modal, capstone placement status.
+
+---
+
+## ✨ Core Features & Product Concept
+
+- **Proof-of-Work Consistency**: Students maintain a daily streak by submitting GitHub commits and sharing LinkedIn build posts.
+- **Supportive Streak Recovery**: Instead of penalizing students with a flat reset, missed days offer choice-based recovery (spending XP or completing a recovery task/quiz).
+- **Interactive 60-Day Habit Matrix**: A visual contribution heatmap grid mapping locked, active, missed, and completed days. **Tapping any completed day opens its historical submission details modal!**
+- **Recruiter Visibility Score Meter**: An interactive meter calculating real-time recruiter matching potential based on code consistency.
+- **Glassmorphic Design System**: Deep slate palette (`#020617`), ambient radial glow orbs, linear-style gradient borders, custom scrollbars, and dynamic Light/Dark mode switcher.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router with Turbopack)
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS v4, Vanilla CSS
+- **Styling**: Tailwind CSS v4, Custom CSS Variables
 - **Animations**: Framer Motion
-- **Icons**: Lucide Icons
-- **Celebrations**: canvas-confetti
+- **Icons**: Lucide React
+- **Celebrations**: `canvas-confetti`
+- **Deployment**: Vercel Production
 
-## Getting Started
+---
 
-First, install dependencies:
+## 💻 Local Development Setup
+
+First, clone the repository and install dependencies:
+
 ```bash
+git clone https://github.com/Aravindh9652/AB_Talks_Redesign.git
+cd AB_Talks_Redesign
 npm install
 ```
 
-Second, run the development server:
+Second, run the local development server:
+
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your mobile developer emulation (390px) to view the interface.
+Open [http://localhost:3000](http://localhost:3000) with mobile developer emulation set to **390px width**.
+
+To verify the production build locally:
+
+```bash
+npm run build
+npm start
+```
