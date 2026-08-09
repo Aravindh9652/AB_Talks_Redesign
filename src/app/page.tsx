@@ -83,7 +83,10 @@ export default function LandingPage() {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showSignupConfirm, setShowSignupConfirm] = useState(false);
 
-  // Helper to open modal with freshly cleared inputs
+  // Dynamic key to force fresh DOM element instantiation on modal open
+  const [authModalKey, setAuthModalKey] = useState(0);
+
+  // Helper to open modal with freshly cleared inputs & fresh DOM key
   const openAuthModal = (modalType: "login" | "signup" | "forgot" | "reset" | null) => {
     setLoginEmail("");
     setLoginPassword("");
@@ -100,6 +103,7 @@ export default function LandingPage() {
     setNewPassword("");
     setNewPasswordConfirm("");
     setResetSuccess(false);
+    setAuthModalKey(prev => prev + 1);
     setAuthModal(modalType);
   };
 
@@ -697,7 +701,10 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <form onSubmit={handleLoginSubmit} autoComplete="off" key={`login-form-${authModalKey}`} className="space-y-4">
+                  {/* Dummy trap fields to absorb browser credential autofill */}
+                  <input type="text" name="fake_email_login_trap" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+                  <input type="password" name="fake_password_login_trap" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
                   
                   {/* Email */}
                   <div className="space-y-1.5">
@@ -705,7 +712,13 @@ export default function LandingPage() {
                       📧 EMAIL ADDRESS
                     </label>
                     <input 
-                      type="email" 
+                      type="text" 
+                      inputMode="email"
+                      name="clean_login_user_email"
+                      id="clean_login_user_email"
+                      autoComplete="off"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       placeholder="your.email@domain.com"
@@ -721,6 +734,11 @@ export default function LandingPage() {
                     <div className="relative flex items-center">
                       <input 
                         type={showLoginPassword ? "text" : "password"}
+                        name="clean_login_user_password"
+                        id="clean_login_user_password"
+                        autoComplete="new-password"
+                        data-1p-ignore="true"
+                        data-lpignore="true"
                         value={loginPassword}
                         onChange={(e) => setLoginPassword(e.target.value)}
                         placeholder="••••••"
@@ -958,7 +976,11 @@ export default function LandingPage() {
                   </div>
                 )}
 
-                <form onSubmit={handleSignupSubmit} className="space-y-3.5">
+                <form onSubmit={handleSignupSubmit} autoComplete="off" key={`signup-form-${authModalKey}`} className="space-y-3.5">
+                  {/* Dummy trap fields to absorb browser credential autofill */}
+                  <input type="text" name="fake_email_signup_trap" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+                  <input type="password" name="fake_password_signup_trap" style={{ display: 'none' }} tabIndex={-1} autoComplete="off" />
+
                   <div className="grid grid-cols-2 gap-3 text-[10px]">
                     
                     {/* Full name */}
@@ -966,6 +988,10 @@ export default function LandingPage() {
                       <label className="text-[8px] font-black uppercase text-slate-400">👤 FULL NAME</label>
                       <input 
                         type="text" 
+                        name="clean_signup_user_fullname"
+                        autoComplete="off"
+                        data-1p-ignore="true"
+                        data-lpignore="true"
                         value={signupName}
                         onChange={(e) => setSignupName(e.target.value)}
                         placeholder="Your name"
@@ -978,6 +1004,10 @@ export default function LandingPage() {
                       <label className="text-[8px] font-black uppercase text-slate-400">📱 PHONE (OPTIONAL)</label>
                       <input 
                         type="text" 
+                        name="clean_signup_user_phone"
+                        autoComplete="off"
+                        data-1p-ignore="true"
+                        data-lpignore="true"
                         value={signupPhone}
                         onChange={(e) => setSignupPhone(e.target.value)}
                         placeholder="+91 98765 43210"
@@ -990,7 +1020,12 @@ export default function LandingPage() {
                   <div className="space-y-1">
                     <label className="text-[8px] font-black uppercase text-slate-400">📧 EMAIL ADDRESS</label>
                     <input 
-                      type="email" 
+                      type="text" 
+                      inputMode="email"
+                      name="clean_signup_user_email"
+                      autoComplete="off"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
                       value={signupEmail}
                       onChange={(e) => setSignupEmail(e.target.value)}
                       placeholder="your.email@domain.com"
@@ -1003,6 +1038,10 @@ export default function LandingPage() {
                     <label className="text-[8px] font-black uppercase text-slate-400">📍 LOCATION (OPTIONAL)</label>
                     <input 
                       type="text" 
+                      name="clean_signup_user_location"
+                      autoComplete="off"
+                      data-1p-ignore="true"
+                      data-lpignore="true"
                       value={signupLocation}
                       onChange={(e) => setSignupLocation(e.target.value)}
                       placeholder="City, State"
@@ -1018,6 +1057,10 @@ export default function LandingPage() {
                       <div className="relative flex items-center">
                         <input 
                           type={showSignupPassword ? "text" : "password"}
+                          name="clean_signup_user_password"
+                          autoComplete="new-password"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
                           value={signupPassword}
                           onChange={(e) => setSignupPassword(e.target.value)}
                           placeholder="••••••"
@@ -1039,6 +1082,10 @@ export default function LandingPage() {
                       <div className="relative flex items-center">
                         <input 
                           type={showSignupConfirm ? "text" : "password"}
+                          name="clean_signup_user_confirm"
+                          autoComplete="new-password"
+                          data-1p-ignore="true"
+                          data-lpignore="true"
                           value={signupConfirm}
                           onChange={(e) => setSignupConfirm(e.target.value)}
                           placeholder="••••••"

@@ -145,3 +145,14 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--brand-primary);
 }
+
+/* Prevent browser autofill background color overrides */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #020617 inset !important;
+  -webkit-text-fill-color: #f8fafc !important;
+  caret-color: #f8fafc;
+  transition: background-color 9999s ease-in-out 0s;
+}
