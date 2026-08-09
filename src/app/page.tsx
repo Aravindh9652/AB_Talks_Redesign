@@ -83,6 +83,26 @@ export default function LandingPage() {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [showSignupConfirm, setShowSignupConfirm] = useState(false);
 
+  // Helper to open modal with freshly cleared inputs
+  const openAuthModal = (modalType: "login" | "signup" | "forgot" | "reset" | null) => {
+    setLoginEmail("");
+    setLoginPassword("");
+    setLoginError(null);
+    setSignupName("");
+    setSignupPhone("");
+    setSignupEmail("");
+    setSignupLocation("");
+    setSignupPassword("");
+    setSignupConfirm("");
+    setSignupError(null);
+    setForgotEmail("");
+    setForgotError(null);
+    setNewPassword("");
+    setNewPasswordConfirm("");
+    setResetSuccess(false);
+    setAuthModal(modalType);
+  };
+
   // Simulated DB state
   const [registeredUsers, setRegisteredUsers] = useState<Array<{
     name: string;
@@ -90,31 +110,14 @@ export default function LandingPage() {
     phone: string;
     location: string;
     password?: string;
-  }>>([
-    {
-      name: "Akhil",
-      email: "akhil@gmail.com",
-      phone: "+919876543256",
-      location: "Gannavaram, AP",
-      password: "123456"
-    }
-  ]);
+  }>>([]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const saved = localStorage.getItem("abtalks_users");
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        if (!parsed.some((u: any) => u.email === "akhil@gmail.com")) {
-          parsed.unshift({
-            name: "Akhil",
-            email: "akhil@gmail.com",
-            phone: "+919876543256",
-            location: "Gannavaram, AP",
-            password: "123456"
-          });
-        }
-        setRegisteredUsers(parsed);
+        setRegisteredUsers(JSON.parse(saved));
       } catch (e) {
         console.error(e);
       }
@@ -141,7 +144,7 @@ export default function LandingPage() {
       return;
     }
 
-    // Always read directly from localStorage (source of truth) to avoid stale React state
+    // Always read directly from localStorage (source of truth)
     let allUsers: Array<{ name: string; email: string; phone?: string; location?: string; password?: string }> = [];
     try {
       const saved = localStorage.getItem("abtalks_users");
@@ -150,11 +153,6 @@ export default function LandingPage() {
       }
     } catch (e) {
       console.error(e);
-    }
-
-    // Always include the seed Akhil account
-    if (!allUsers.some(u => u.email === "akhil@gmail.com")) {
-      allUsers.unshift({ name: "Akhil", email: "akhil@gmail.com", phone: "+919876543256", location: "Gannavaram, AP", password: "123456" });
     }
 
     const emailMatch = allUsers.find(u => u.email.toLowerCase() === loginEmail.toLowerCase());
@@ -325,13 +323,13 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <ThemeSelector />
             <button 
-              onClick={() => setAuthModal("login")}
+              onClick={() => openAuthModal("login")}
               className="rounded-full bg-brand px-5 py-1.5 text-xs font-bold hover:bg-brand/90 transition-all cursor-pointer text-white shadow-sm shadow-brand/10"
             >
               Login
             </button>
             <button 
-              onClick={() => setAuthModal("signup")}
+              onClick={() => openAuthModal("signup")}
               className="rounded-full bg-brand px-5 py-1.5 text-xs font-bold hover:bg-brand/90 transition-all cursor-pointer text-white shadow-sm shadow-brand/10"
             >
               Sign Up
@@ -377,7 +375,7 @@ export default function LandingPage() {
           className="mt-6 flex flex-col gap-3 justify-center items-center"
         >
           <button
-            onClick={() => setAuthModal("signup")}
+            onClick={() => openAuthModal("signup")}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3.5 px-6 text-xs font-bold text-white shadow-lg shadow-brand/25 hover:bg-brand/90 hover:shadow-brand/35 transition-all hover:-translate-y-0.5 active:translate-y-0 duration-200 cursor-pointer"
           >
             Claim Your Spot <ArrowRight className="h-4 w-4" />
@@ -652,7 +650,7 @@ export default function LandingPage() {
           Cohort 05 spots are filling up. Start building in public and unlock direct matches with companies.
         </p>
         <button
-          onClick={() => setAuthModal("signup")}
+          onClick={() => openAuthModal("signup")}
           className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand py-3.5 px-6 text-xs font-bold text-white shadow-lg shadow-brand/25 hover:bg-brand/90 transition-all hover:scale-102 cursor-pointer"
         >
           Register for the Cohort <ArrowRight className="h-4 w-4" />
@@ -710,7 +708,7 @@ export default function LandingPage() {
                       type="email" 
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="akhil@gmail.com"
+                      placeholder="your.email@domain.com"
                       className="w-full rounded-xl bg-slate-950 border border-white/10 px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand"
                     />
                   </div>
@@ -761,7 +759,7 @@ export default function LandingPage() {
                 <div className="text-center text-[10px] mt-5 text-slate-400">
                   Don't have an account?{" "}
                   <button 
-                    onClick={() => setAuthModal("signup")}
+                    onClick={() => openAuthModal("signup")}
                     className="text-brand font-bold hover:underline"
                   >
                     Sign up here
@@ -821,7 +819,7 @@ export default function LandingPage() {
 
                 <div className="text-center text-[10px] mt-4 text-slate-500">
                   Remember it?{" "}
-                  <button onClick={() => setAuthModal("login")} className="text-brand font-bold hover:underline">Back to Login</button>
+                  <button onClick={() => openAuthModal("login")} className="text-brand font-bold hover:underline">Back to Login</button>
                 </div>
               </motion.div>
             )}
@@ -851,7 +849,7 @@ export default function LandingPage() {
                     <h3 className="text-base font-extrabold text-emerald-400">Password Reset!</h3>
                     <p className="text-[10px] text-slate-400">Your password has been updated successfully.</p>
                     <button
-                      onClick={() => { setAuthModal("login"); setResetSuccess(false); setForgotError(null); }}
+                      onClick={() => { openAuthModal("login"); }}
                       className="w-full rounded-xl bg-brand py-3 text-xs font-bold text-white hover:bg-brand/90 transition-all mt-2"
                     >
                       Back to Login →
@@ -995,7 +993,7 @@ export default function LandingPage() {
                       type="email" 
                       value={signupEmail}
                       onChange={(e) => setSignupEmail(e.target.value)}
-                      placeholder="akhil@gmail.com"
+                      placeholder="your.email@domain.com"
                       className="w-full rounded-xl bg-slate-950 border border-white/10 px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-brand"
                     />
                   </div>
@@ -1068,7 +1066,7 @@ export default function LandingPage() {
                 <div className="text-center text-[10px] mt-4 text-slate-400">
                   Already have an account?{" "}
                   <button 
-                    onClick={() => setAuthModal("login")}
+                    onClick={() => openAuthModal("login")}
                     className="text-brand font-bold hover:underline"
                   >
                     Login here

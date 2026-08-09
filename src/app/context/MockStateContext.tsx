@@ -121,12 +121,12 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
   const [streakRefreezes, setStreakRefreezes] = useState(1);
   
   // Profile Hub parameters
-  const [profileName, setProfileName] = useState("Vajja Aravindh");
-  const [profileEmail, setProfileEmail] = useState("vajjaaravindh@gmail.com");
-  const [profilePhone, setProfilePhone] = useState("+919876543256");
-  const [profileLocation, setProfileLocation] = useState("Gannavaram, AP");
-  const [profileBio, setProfileBio] = useState("A Motivated Btech Student");
-  const [profileSkills, setProfileSkills] = useState("Java, c, c++, python");
+  const [profileName, setProfileName] = useState("Student Builder");
+  const [profileEmail, setProfileEmail] = useState("student@abtalks.dev");
+  const [profilePhone, setProfilePhone] = useState("+91 98765 43210");
+  const [profileLocation, setProfileLocation] = useState("India");
+  const [profileBio, setProfileBio] = useState("A Motivated BTech Student");
+  const [profileSkills, setProfileSkills] = useState("Java, C, C++, Python");
   const [goals, setGoals] = useState<Goal[]>([
     { id: 1, text: "Complete REST API task by midnight", completed: false },
     { id: 2, text: "Push vector database embeddings collection", completed: true }
@@ -647,9 +647,12 @@ export function MockStateProvider({ children }: { children: React.ReactNode }) {
     setGithubCommit("feat: implement vector db query optimization and cache layer");
     setLinkedinPost("https://linkedin.com/posts/vajjaaravindh_day12-rag-pipeline-building");
     setStreakRefreezes(1);
-    setWasStreakRecovered(false);
-    setProfileBio("A Motivated Btech Student");
-    setProfileSkills("Java, c, c++, python");
+    setProfileName("Student Builder");
+    setProfileEmail("student@abtalks.dev");
+    setProfilePhone("+91 98765 43210");
+    setProfileLocation("India");
+    setProfileBio("A Motivated BTech Student");
+    setProfileSkills("Java, C, C++, Python");
     setSubmissions([
       {
         day: 11,
